@@ -199,7 +199,7 @@ class BuildingEnergyOptimizationPipeline:
         
         # Create optimization problem
         problem = HVACOptimizationProblem(
-            digital_twin=self.digital_twin.predict,
+            digital_twin=self.digital_twin,  # Pass the DigitalTwin object, not the method
             historical_data=historical_data,
             config=self.config
         )

@@ -116,6 +116,29 @@ def plot_optimization_history(history: Dict, save_path: Optional[str] = None):
     # Placeholder for future implementation
     pass
 
+def _convert_to_serializable(obj):
+    """
+    Recursively convert numpy types to Python native types for JSON serialization.
+    
+    Args:
+        obj: Object to convert
+        
+    Returns:
+        Serializable object
+    """
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, (np.int64, np.int32, np.int_)):
+        return int(obj)
+    elif isinstance(obj, (np.float64, np.float32, np.float_)):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {key: _convert_to_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [_convert_to_serializable(item) for item in obj]
+    else:
+        return obj
+
 def save_results(results: Dict, filepath: str):
     """
     Save optimization results to file.
@@ -126,17 +149,8 @@ def save_results(results: Dict, filepath: str):
     """
     ensure_dir(os.path.dirname(filepath))
     
-    # Convert numpy arrays to lists for JSON serialization
-    results_serializable = {}
-    for key, value in results.items():
-        if isinstance(value, np.ndarray):
-            results_serializable[key] = value.tolist()
-        elif isinstance(value, (np.int64, np.int32)):
-            results_serializable[key] = int(value)
-        elif isinstance(value, (np.float64, np.float32)):
-            results_serializable[key] = float(value)
-        else:
-            results_serializable[key] = value
+    # Convert numpy arrays and types to Python native types for JSON serialization
+    results_serializable = _convert_to_serializable(results)
     
     import json
     with open(filepath, 'w') as f:

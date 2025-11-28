@@ -19,7 +19,7 @@ from pymoo.operators.mutation.pm import PM
 from pymoo.operators.sampling.rnd import FloatRandomSampling
 from pymoo.optimize import minimize
 from pymoo.visualization.scatter import Scatter
-from typing import Dict, Callable, Optional, Tuple
+from typing import Dict, Callable, Optional, Tuple, Any
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -43,14 +43,14 @@ class HVACOptimizationProblem(Problem):
     - Actuator limits: 18°C <= T_set <= 26°C
     """
     
-    def __init__(self, digital_twin: Callable, 
+    def __init__(self, digital_twin: Any, 
                  historical_data: pd.DataFrame,
                  config: Dict):
         """
         Initialize optimization problem.
         
         Args:
-            digital_twin: Trained Digital Twin model (callable)
+            digital_twin: Trained Digital Twin model object (must have .predict() method)
             historical_data: Historical building data for simulation
             config: Configuration dictionary
         """
