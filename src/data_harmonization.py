@@ -133,9 +133,21 @@ class DataHarmonizer:
         # Remove any rows with NaT (Not a Time) in index
         df_sync = df_sync[~df_sync.index.isna()]
         
+        # CRITICAL FIX: Only resample numeric columns to prevent TypeError
+        # Convert all columns to numeric where possible, coercing errors to NaN
+        for col in df_sync.columns:
+            # Try to convert to numeric (coerce errors to NaN)
+            df_sync[col] = pd.to_numeric(df_sync[col], errors='coerce')
+        
+        # Filter to only numeric columns using select_dtypes (more reliable)
+        df_sync = df_sync.select_dtypes(include=[np.number])
+        
+        if df_sync.empty or len(df_sync.columns) == 0:
+            raise ValueError("No numeric columns found after type coercion. Check data format.")
+        
         # Identify continuous vs cumulative variables
-        continuous_vars = ['T_out', 'T_in', 'RH_out', 'RH_in', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9']
-        cumulative_vars = ['E_load', 'Appliances']
+        continuous_vars = ['T_out', 'T_in', 'RH_out', 'RH_in', 'T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'RH_1', 'RH_2', 'RH_3', 'RH_4', 'RH_5', 'RH_6', 'RH_7', 'RH_8', 'RH_9']
+        cumulative_vars = ['E_load', 'Appliances', 'lights']
         
         # Resample: mean for continuous, sum for cumulative
         resampled_data = {}
@@ -146,7 +158,7 @@ class DataHarmonizer:
             elif col in cumulative_vars or any(var in col for var in cumulative_vars):
                 resampled_data[col] = df_sync[col].resample(self.resample_freq).sum()
             else:
-                # Default to mean
+                # Default to mean for other numeric columns
                 resampled_data[col] = df_sync[col].resample(self.resample_freq).mean()
         
         df_resampled = pd.DataFrame(resampled_data)
@@ -220,6 +232,14 @@ class DataHarmonizer:
         
         # Step 1: Schema Standardization
         df_harmonized = self.standardize_schema(df)
+        
+        # Auto-detect datetime column if not provided
+        if datetime_col is None:
+            datetime_candidates = ['date', 'Date', 'datetime', 'DateTime', 'time', 'Time']
+            for candidate in datetime_candidates:
+                if candidate in df_harmonized.columns:
+                    datetime_col = candidate
+                    break
         
         # Step 2: Temporal Synchronization
         df_harmonized = self.synchronize_temporal(df_harmonized, datetime_col)

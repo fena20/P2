@@ -16,6 +16,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+from typing import Dict
 warnings.filterwarnings('ignore')
 
 from src.data_harmonization import DataHarmonizer, load_and_harmonize_data
@@ -85,7 +86,20 @@ class BuildingEnergyOptimizationPipeline:
         logger.info("Harmonizing data...")
         self.data_harmonizer = DataHarmonizer(self.config.get('feature_engineering', {}))
         df = pd.read_csv(local_path)
-        df_harmonized = self.data_harmonizer.harmonize(df)
+        
+        # CRITICAL FIX: Explicitly coerce all columns to numeric types (except datetime)
+        # This prevents 'agg function failed' errors during resampling
+        datetime_col = 'date'  # Default datetime column name
+        if datetime_col in df.columns:
+            # Keep datetime column as is for now
+            pass
+        
+        # Coerce all other columns to numeric, handling errors gracefully
+        for col in df.columns:
+            if col != datetime_col and col.lower() != 'date':
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        df_harmonized = self.data_harmonizer.harmonize(df, datetime_col=datetime_col)
         
         logger.info(f"Data harmonization complete. Shape: {df_harmonized.shape}")
         return df_harmonized
