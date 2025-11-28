@@ -1,0 +1,94 @@
+# Configuration file for Multi-Objective Building Energy Optimization Framework
+
+data:
+  source_url: "https://raw.githubusercontent.com/Fateme9977/P2/main/energydata_complete.csv"
+  local_path: "data/energydata_complete.csv"
+  target_column: "Appliances"
+  train_datasets: [1, 2, 3]  # Dataset indices for training
+  test_datasets: [4, 5, 6]   # Dataset indices for testing
+
+feature_engineering:
+  # Thermodynamic parameters
+  enthalpy:
+    cp_air: 1.006  # Specific heat of air [kJ/(kg·K)]
+    hfg: 2501.0     # Latent heat of vaporization [kJ/kg]
+  
+  # EMA parameters for thermal inertia
+  ema_alpha: 0.3    # Exponential moving average smoothing factor
+  
+  # Temporal synchronization
+  resample_freq: "1H"  # Hourly resampling
+  
+  # Feature standardization
+  standardize: true
+
+digital_twin:
+  # Stacking Ensemble configuration
+  base_models:
+    - name: "xgboost"
+      params:
+        n_estimators: 100
+        max_depth: 6
+        learning_rate: 0.1
+        random_state: 42
+    
+    - name: "lightgbm"
+      params:
+        n_estimators: 100
+        max_depth: 6
+        learning_rate: 0.1
+        random_state: 42
+    
+    - name: "catboost"
+      params:
+        iterations: 100
+        depth: 6
+        learning_rate: 0.1
+        random_seed: 42
+  
+  meta_model:
+    name: "ridge"
+    params:
+      alpha: 1.0
+  
+  # Cross-validation
+  cv_folds: 5
+  random_state: 42
+
+optimization:
+  # NSGA-II parameters
+  algorithm: "NSGA2"
+  population_size: 50
+  n_generations: 100
+  
+  # Decision variables (thermostat setpoints)
+  decision_variables:
+    T_set_heat:
+      lower_bound: 18.0  # °C
+      upper_bound: 24.0  # °C
+    
+    T_set_cool:
+      lower_bound: 20.0  # °C
+      upper_bound: 26.0  # °C
+  
+  # Constraints
+  deadband_min: 2.0  # Minimum deadband between heating and cooling setpoints [°C]
+  
+  # Objective function weights
+  discomfort:
+    temp_weight: 1.0
+    rh_weight: 0.5
+    optimal_temp: 22.0  # Optimal indoor temperature [°C]
+    optimal_rh: 50.0    # Optimal relative humidity [%]
+
+mcdm:
+  method: "TOPSIS"
+  weights:
+    energy: 0.5
+    discomfort: 0.5
+
+output:
+  results_dir: "results"
+  figures_dir: "figures"
+  save_pareto_front: true
+  save_optimization_history: true
