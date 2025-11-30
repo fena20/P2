@@ -128,14 +128,18 @@ def _convert_to_serializable(obj):
     """
     if isinstance(obj, np.ndarray):
         return obj.tolist()
-    elif isinstance(obj, (np.int64, np.int32, np.int_)):
+    elif isinstance(obj, (np.int64, np.int32, np.int_, np.integer)):
         return int(obj)
-    elif isinstance(obj, (np.float64, np.float32, np.float_)):
+    elif isinstance(obj, (np.float64, np.float32, np.float_, np.floating)):
         return float(obj)
+    elif isinstance(obj, (pd.Series, pd.DataFrame)):
+        return obj.tolist() if isinstance(obj, pd.Series) else obj.to_dict('records')
     elif isinstance(obj, dict):
         return {key: _convert_to_serializable(value) for key, value in obj.items()}
     elif isinstance(obj, (list, tuple)):
         return [_convert_to_serializable(item) for item in obj]
+    elif pd.isna(obj):  # Handle pandas NA values
+        return None
     else:
         return obj
 
@@ -147,7 +151,10 @@ def save_results(results: Dict, filepath: str):
         results: Results dictionary
         filepath: Path to save results
     """
-    ensure_dir(os.path.dirname(filepath))
+    # Ensure directory exists
+    dir_path = os.path.dirname(filepath)
+    if dir_path:  # Only create directory if path has a directory component
+        ensure_dir(dir_path)
     
     # Convert numpy arrays and types to Python native types for JSON serialization
     results_serializable = _convert_to_serializable(results)
