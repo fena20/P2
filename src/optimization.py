@@ -128,8 +128,11 @@ class HVACOptimizationProblem(Problem):
         
         # Predict energy consumption using Digital Twin
         # Prepare features for prediction
+        # Exclude target columns and datetime columns
+        exclude_cols = ['Appliances', 'E_load', 'date', 'Date', 'T_set_heat', 'T_set_cool', 
+                        'heating_active', 'cooling_active']
         feature_cols = [col for col in sim_data.columns 
-                       if col not in ['Appliances', 'E_load', 'date']]
+                       if col not in exclude_cols]
         X_sim = sim_data[feature_cols]
         
         # Ensure all required features are present
@@ -137,9 +140,15 @@ class HVACOptimizationProblem(Problem):
             energy_pred = self.digital_twin.predict(X_sim)
         except Exception as e:
             logger.warning(f"Prediction error: {e}. Using baseline energy.")
-            energy_pred = sim_data.get('Appliances', np.zeros(len(sim_data)))
-            if isinstance(energy_pred, pd.Series):
-                energy_pred = energy_pred.values
+            # Try to find target column with different possible names
+            if 'Appliances' in sim_data.columns:
+                energy_pred = sim_data['Appliances'].values
+            elif 'E_load' in sim_data.columns:
+                energy_pred = sim_data['E_load'].values
+            else:
+                # Use zeros as fallback
+                energy_pred = np.zeros(len(sim_data))
+                logger.warning("No target column found. Using zeros as baseline energy.")
         
         return sim_data, energy_pred
     

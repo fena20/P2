@@ -191,8 +191,19 @@ class BuildingEnergyOptimizationPipeline:
         logger.info("=" * 80)
         
         # Prepare historical data for simulation
+        # Find actual target column name (may have been renamed during harmonization)
         target_col = self.config.get('data', {}).get('target_column', 'Appliances')
-        exclude_cols = [target_col, 'date', 'Date']
+        if target_col not in df.columns:
+            # Try alternative names
+            if 'Appliances' in df.columns:
+                target_col = 'Appliances'
+            elif 'E_load' in df.columns:
+                target_col = 'E_load'
+            else:
+                logger.warning(f"Target column '{target_col}' not found. Proceeding without excluding it.")
+        
+        exclude_cols = [target_col, 'date', 'Date', 'Appliances', 'E_load']  # Exclude all possible target names
+        exclude_cols = [col for col in exclude_cols if col in df.columns]  # Only exclude if column exists
         feature_cols = [col for col in df.columns if col not in exclude_cols]
         historical_data = df[feature_cols].select_dtypes(include=[np.number])
         historical_data = historical_data.ffill().bfill()
