@@ -1,3 +1,3 @@
 Training Method,R²,MAE (Wh),Training Time (s),Raw Data Transmitted,Privacy Score
-Centralized,0.2751346172876037,48.621156625266366,10.717541,All data to server,Low
-Federated (3 clients),0.37504641631539903,38.67533814625906,28.187531,None (model params only),High
+Centralized,0.2751346172876037,48.621156625266366,11.980023,All data to server,Low
+Federated (3 clients),0.37504641631539903,38.67533814625906,30.283656,None (model params only),High
