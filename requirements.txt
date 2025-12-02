@@ -1,0 +1,42 @@
+# Edge AI Building Energy Optimization System - Requirements
+# Deep Learning and RL Framework
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+
+# Reinforcement Learning
+gym>=0.26.0
+stable-baselines3>=2.0.0
+gymnasium>=0.28.0
+
+# Transformer Models
+transformers>=4.30.0
+
+# Data Processing and Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.14.0
+scipy>=1.10.0
+
+# Federated Learning
+opacus>=1.4.0
+
+# HVAC and Building Simulation
+energyplus-rdd>=0.3.0
+
+# Utilities
+tqdm>=4.65.0
+tensorboard>=2.13.0
+pyyaml>=6.0
+joblib>=1.3.0
+requests>=2.31.0
+
+# Edge AI Optimization
+onnx>=1.14.0
+onnxruntime>=1.15.0
+
+# Scientific Computing
+h5py>=3.9.0
+tables>=3.8.0
