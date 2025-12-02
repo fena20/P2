@@ -8,9 +8,13 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
 import xgboost as xgb
 import pickle
 from typing import Tuple, Dict, List
@@ -86,8 +90,10 @@ class SurrogateModel:
         
         return np.array(X_seq), np.array(y_seq)
     
-    def build_lstm_model(self, input_shape: Tuple) -> keras.Model:
+    def build_lstm_model(self, input_shape: Tuple):
         """Build LSTM model architecture"""
+        if not TENSORFLOW_AVAILABLE:
+            raise ImportError("TensorFlow is required for LSTM models. Install with: pip install tensorflow")
         model = keras.Sequential([
             layers.LSTM(64, return_sequences=True, input_shape=input_shape),
             layers.Dropout(0.2),
@@ -132,6 +138,8 @@ class SurrogateModel:
             y_train, y_val = y_seq[:split_idx], y_seq[split_idx:]
             
             # Build model
+            if not TENSORFLOW_AVAILABLE:
+                raise ImportError("TensorFlow is required for LSTM models. Install with: pip install tensorflow")
             self.model = self.build_lstm_model((self.sequence_length, X.shape[1]))
             
             # Train
@@ -229,6 +237,8 @@ class SurrogateModel:
     def save_model(self, filepath: str):
         """Save trained model"""
         if self.model_type == 'lstm':
+            if not TENSORFLOW_AVAILABLE:
+                raise ImportError("TensorFlow is required for LSTM models")
             self.model.save(filepath)
         else:
             pickle.dump({
@@ -239,6 +249,8 @@ class SurrogateModel:
     def load_model(self, filepath: str):
         """Load trained model"""
         if self.model_type == 'lstm':
+            if not TENSORFLOW_AVAILABLE:
+                raise ImportError("TensorFlow is required for LSTM models")
             self.model = keras.models.load_model(filepath)
         else:
             models = pickle.load(open(filepath, 'rb'))
