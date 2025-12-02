@@ -10,11 +10,16 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import torch
 import json
 
 # Set publication-quality style
-plt.style.use('seaborn-v0_8-paper')
+try:
+    plt.style.use('seaborn-v0_8-paper')
+except:
+    try:
+        plt.style.use('seaborn-paper')
+    except:
+        plt.style.use('seaborn-whitegrid')
 sns.set_palette("husl")
 sns.set_context("paper", font_scale=1.2)
 
