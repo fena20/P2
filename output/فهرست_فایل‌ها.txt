@@ -1,0 +1,32 @@
+========================================
+فهرست فایل‌های خروجی
+========================================
+
+پوشه output شامل تمام تصاویر و جداول تولید شده برای پروژه تحقیقاتی است.
+
+تصاویر (7 فایل PNG با کیفیت 300 DPI):
+---------------------------------------
+1. figure1_architecture.png - نمای کلی معماری سیستم
+2. figure2_training_curves.png - منحنی‌های آموزش مدل‌های یادگیری عمیق
+3. figure3_rl_performance.png - عملکرد یادگیری تقویتی
+4. figure4_multi_agent.png - مقایسه چند عامله
+5. figure5_federated.png - همگرایی یادگیری فدرال
+6. figure6_edge_inference.png - عملکرد استنتاج Edge AI
+7. figure7_prediction.png - دقت پیش‌بینی انرژی
+
+جداول (8 فایل CSV):
+-------------------
+1. table1_model_comparison.csv - مقایسه عملکرد مدل‌های یادگیری عمیق
+2. table2_rl_performance.csv - معیارهای عملکرد یادگیری تقویتی
+3. table3_multi_agent.csv - مقایسه چند عامله
+4. table4_federated_learning.csv - همگرایی یادگیری فدرال
+5. table5_edge_performance.csv - معیارهای استقرار Edge AI
+6. table6_energy_savings.csv - صرفه‌جویی انرژی بر اساس فصل
+7. table7_hyperparameters.csv - تنظیمات هایپرپارامترها
+8. table8_baseline_comparison.csv - مقایسه با روش‌های پایه
+
+تمام فایل‌ها آماده استفاده در مقاله تحقیقاتی هستند.
+
+تاریخ تولید: دسامبر 2024
+فرمت: PNG (تصاویر)، CSV (جداول)
+کیفیت: آماده انتشار (300 DPI برای تصاویر)
