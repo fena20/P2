@@ -1,0 +1,9 @@
+Table 1: Characteristics of Selected Case Study Buildings
+================================================================================
+
+Building ID  Primary Use  Floor Area (m²) Climate Zone  Year Built Data Resolution
+     Res_01  Residential             1200    Hot-Humid        2010          1-Hour
+     Res_02    Dormitory             3500    Mixed-Dry        2005          1-Hour
+     Res_03 Multi-family             2100         Cold        2015          1-Hour
+     Res_04  Residential             1800      Hot-Dry        2012          1-Hour
+     Res_05      Lodging             4200       Marine        2008          1-Hour

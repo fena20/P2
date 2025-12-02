@@ -1,0 +1,5 @@
+Metric,LSTM,XGBoost
+MAE (kWh),11.2511,16.6287
+RMSE (kWh),15.6387,24.0642
+R² Score,0.9597,0.9063
+MAPE (%),19.96,29.46

@@ -1,0 +1,7 @@
+Variable Category,Feature Name,Unit,Source,Relevance to Proposal
+Environmental,Outdoor Air Temp,°C,BDG2 Weather,Climatic data analysis
+Environmental,Global Solar Radiation,W/m²,BDG2 Weather,Impact on heating/cooling load
+Environmental,Relative Humidity,%,BDG2 Weather,Latent load calculation
+Temporal,Hour of Day,0-23,Time Feature,Residents' behavioral patterns
+Temporal,Day of Week,1-7,Time Feature,Occupancy schedules
+Control,Cooling/Heating Setpoint,°C,Optimization Variable,System control parameters

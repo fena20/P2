@@ -1,0 +1,6 @@
+Performance Metric,Baseline Controller,Proposed AI-Optimizer,Improvement (%)
+Total Energy (kWh),914.2,876.2,4.2% ↓
+Energy Cost ($),163.17,156.44,4.1% ↓
+Comfort Violation (Hrs),13,0,100.0% ↓
+Computational Time (s),3600 (Physics Sim),43.5 (Surrogate Model),98.8% ↓
+Cost per kWh ($),0.178,0.179,4.1% ↓

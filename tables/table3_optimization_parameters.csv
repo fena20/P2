@@ -1,0 +1,7 @@
+Parameter,Description,Value / Constraint
+Objective Function,Minimize: J = C_energy + w · D_comfort,Cost vs. Comfort Trade-off
+Decision Variable,HVAC Setpoint (T_set),19°C ≤ T_set ≤ 26°C
+Comfort Range (Temperature),Indoor Temperature,21°C ≤ T_indoor ≤ 24°C
+PMV (Predicted Mean Vote),Thermal Comfort Index,-0.5 ≤ PMV ≤ +0.5
+Algorithm,Genetic Algorithm (GA),"Population: 50, Generations: 100"
+Time Horizon,Prediction Window,24 Hours (Day-ahead)

@@ -1,0 +1,12 @@
+Annual Savings Projection
+================================================================================
+
+Baseline Annual Cost:    $59,068.04
+Optimized Annual Cost:   $56,630.22
+Annual Savings:          $2,437.82
+Savings Percentage:      4.1%
+
+Assumptions:
+  - 100 hot summer days
+  - 100 cold winter days
+  - 165 mild spring/fall days

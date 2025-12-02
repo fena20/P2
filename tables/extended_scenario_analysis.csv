@@ -1,0 +1,4 @@
+Scenario,Baseline Energy (kWh),Optimal Energy (kWh),Energy Savings (%),Baseline Cost ($),Optimal Cost ($),Cost Savings (%)
+Summer Day (Hot),914.2,876.2,4.2%,163.17,156.44,4.1%
+Winter Day (Cold),1188.4,1139.0,4.2%,212.12,203.37,4.1%
+Mild Day (Spring/Fall),731.3,700.9,4.2%,130.54,125.15,4.1%
