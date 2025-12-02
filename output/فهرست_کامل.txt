@@ -1,0 +1,81 @@
+========================================
+فهرست کامل فایل‌های تولید شده
+========================================
+
+تاریخ تولید: $(date)
+مسیر: /workspace/output/
+
+========================================
+تصاویر (7 فایل PNG - کیفیت 300 DPI)
+========================================
+
+1. figure1_architecture.png
+   - نمای کلی معماری سیستم Edge AI + Hybrid RL
+   - حجم: 133 KB
+
+2. figure2_training_curves.png
+   - منحنی‌های آموزش مدل‌های LSTM و Transformer
+   - حجم: 227 KB
+
+3. figure3_rl_performance.png
+   - عملکرد یادگیری تقویتی (PPO)
+   - حجم: 439 KB
+
+4. figure4_multi_agent.png
+   - مقایسه Multi-Agent vs Single-Agent
+   - حجم: 243 KB
+
+5. figure5_federated.png
+   - همگرایی یادگیری فدرال
+   - حجم: 282 KB
+
+6. figure6_edge_inference.png
+   - عملکرد استنتاج Edge AI
+   - حجم: 145 KB
+
+7. figure7_prediction.png
+   - دقت پیش‌بینی انرژی
+   - حجم: 573 KB
+
+========================================
+جداول (8 فایل CSV)
+========================================
+
+1. table1_model_comparison.csv
+   - مقایسه عملکرد مدل‌های یادگیری عمیق
+   - شامل: MSE, MAE, RMSE, R², زمان آموزش
+
+2. table2_rl_performance.csv
+   - معیارهای عملکرد یادگیری تقویتی
+   - مقایسه: PPO (LSTM), PPO (Feedforward), Baseline
+
+3. table3_multi_agent.csv
+   - مقایسه Multi-Agent vs Single-Agent
+   - شامل: صرفه‌جویی انرژی، نقض راحتی
+
+4. table4_federated_learning.csv
+   - همگرایی یادگیری فدرال در 10 دور
+   - شامل: Global Loss, Client Losses
+
+5. table5_edge_performance.csv
+   - معیارهای استقرار Edge AI
+   - مقایسه: FP32 vs INT8 (حجم، زمان استنتاج)
+
+6. table6_energy_savings.csv
+   - صرفه‌جویی انرژی بر اساس فصل
+   - شامل: Spring, Summer, Fall, Winter, Annual Average
+
+7. table7_hyperparameters.csv
+   - تنظیمات هایپرپارامترها
+   - شامل: LSTM, Transformer, PPO, Federated Learning
+
+8. table8_baseline_comparison.csv
+   - مقایسه با روش‌های پایه
+   - شامل: Rule-based, PID, DQN, PPO variants
+
+========================================
+مجموع: 15 فایل
+- 7 تصویر PNG (کیفیت انتشار)
+- 8 جدول CSV (قابل باز کردن در Excel)
+
+همه فایل‌ها آماده دانلود و استفاده در مقاله تحقیقاتی هستند.
