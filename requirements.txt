@@ -40,3 +40,6 @@ onnxruntime>=1.15.0
 # Scientific Computing
 h5py>=3.9.0
 tables>=3.8.0
+
+# Explainability
+shap>=0.42.0
