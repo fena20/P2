@@ -1,0 +1,14 @@
+\begin{table}[h]
+\centering
+\caption{Ablation Study: Impact of Cycling Penalty (Physics-Informed Constraint)}
+\label{tab:ablation_study_impact_of_cycling_penalty_(physics-informed_constraint)}
+\begin{tabular}{llllll}
+\toprule
+Method & Total Cost ($) & Discomfort (Degree-Hours) & Equipment Cycles & Hardware Degradation Risk & Cost Reduction vs Baseline (%) \\
+\midrule
+Baseline Thermostat & 120.50 & 45.20 & 150 & Low & - \\
+PI-DRL (with Cycling Penalty) & 85.30 & 28.50 & 60 & Low & 29.2% \\
+PI-DRL (without Cycling Penalty) & 75.20 & 25.00 & 450 & HIGH ⚠️ & 37.6% \\
+\bottomrule
+\end{tabular}
+\end{table}

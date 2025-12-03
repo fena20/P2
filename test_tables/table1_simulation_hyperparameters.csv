@@ -1,0 +1,14 @@
+Category,Parameter,Symbol,Value,Unit,Description
+Thermal Model,Thermal Resistance (R),R,0.050,K/kW,Thermal resistance between indoor and outdoor
+Thermal Model,Thermal Capacitance (C),C,0.50,kWh/K,Building thermal capacitance
+Thermal Model,HVAC Power (P_HVAC),P_HVAC,3.0,kW,Heat pump power consumption when ON
+Thermal Model,Time Step (Δt),Δt,1/60 hours,hours,Simulation time step (1-minute resolution)
+PPO Algorithm,Learning Rate (α),α,3.00e-04,-,PPO learning rate
+PPO Algorithm,Discount Factor (γ),γ,0.99,-,Future reward discount factor
+PPO Algorithm,PPO Steps (n_steps),n_steps,2048,-,Steps collected before update
+PPO Algorithm,Batch Size,batch_size,64,-,Batch size for policy update
+PPO Algorithm,Epochs per Update,n_epochs,10,-,Number of optimization epochs per update
+Reward Function,Cost Weight (w₁),w₁,1.0,-,Energy cost weight in reward function
+Reward Function,Discomfort Weight (w₂),w₂,10.0,-,Thermal discomfort weight in reward function
+Reward Function,Cycling Penalty Weight (w₃),w₃,5.0,-,Cycling penalty weight (hardware protection)
+Hardware Constraint,Minimum Cycle Time,t_min,15 minutes,minutes,Minimum time between state changes
