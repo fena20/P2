@@ -121,9 +121,15 @@ class PI_DRL_Trainer:
             'verbose': 1
         }
         
-        # Load data
+        # Load data (try real data first, fallback to mock)
         print("Loading AMPds2 data...")
-        self.data = load_ampds2_mock_data()
+        try:
+            from pi_drl_environment import load_ampds2_real_data
+            self.data = load_ampds2_real_data(data_dir="./data")
+            print("✓ Using REAL AMPds2 data")
+        except Exception as e:
+            print(f"⚠ Could not load real data ({e}), using mock data...")
+            self.data = load_ampds2_mock_data()
         
         # Create environments
         self.train_env = None

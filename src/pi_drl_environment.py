@@ -13,8 +13,46 @@ import pandas as pd
 import gymnasium as gym
 from gymnasium import spaces
 from typing import Tuple, Dict, Optional
+import os
 import warnings
 warnings.filterwarnings('ignore')
+
+
+def load_ampds2_real_data(
+    data_dir: str = "./data",
+    use_processed: bool = True
+) -> pd.DataFrame:
+    """
+    Load REAL AMPds2 dataset from CSV files
+    
+    Args:
+        data_dir: Directory containing AMPds2 data
+        use_processed: If True, use pre-processed file; else process from raw
+    
+    Returns:
+        DataFrame with required columns
+    """
+    processed_file = os.path.join(data_dir, "ampds2_processed.csv")
+    
+    if use_processed and os.path.exists(processed_file):
+        print(f"Loading pre-processed AMPds2 data from {processed_file}...")
+        df = pd.read_csv(processed_file)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        print(f"✓ Loaded {len(df):,} samples from REAL data")
+        return df
+    else:
+        # Import the real data loader
+        from load_real_ampds2 import load_real_ampds2_data
+        print("Processing real AMPds2 data from CSV files...")
+        df = load_real_ampds2_data(
+            data_dir=data_dir,
+            start_date="2012-04-01",
+            end_date="2012-04-30",  # 1 month
+            max_samples=None
+        )
+        # Save for future use
+        df.to_csv(processed_file, index=False)
+        return df
 
 
 def load_ampds2_mock_data(num_samples: int = 525600) -> pd.DataFrame:

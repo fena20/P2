@@ -1,0 +1,4 @@
+Method,Energy (kWh),Cost ($),Cost Reduction (%),Discomfort (°C·h),Discomfort Reduction (%),Equipment Cycles,Cycle Reduction (%)
+Baseline Thermostat,67.26,10.09,0.0,77060.68,0.0,1,0.0
+Proposed PI-DRL,68.80,10.32,-2.3,74762.58,3.0,0,100.0
+DRL w/o Cycling Penalty,35.37,5.31,47.4,64957.30,15.7,2,-140.0

@@ -1,0 +1,13 @@
+\begin{table}
+\caption{Ablation Study: Impact of Physics-Informed Cycling Penalty on System Performance}
+\label{tab:ablation}
+\begin{tabular}{lcccclc}
+\toprule
+Configuration & Cycling Penalty & Cost ($) & Discomfort (°C·h) & Switches/day & Hardware Risk & Overall Score \\
+\midrule
+Baseline Thermostat & N/A & 10.17 & 71525.12 & 0 & LOW ✓ & 7154.61 \\
+DRL w/o Cycling Penalty & ✗ & 5.31 & 64957.30 & 2 & LOW ✓ & 6497.03 \\
+PI-DRL (Full Model) & ✓ & 10.32 & 81409.47 & 0 & LOW ✓ & 8143.01 \\
+\bottomrule
+\end{tabular}
+\end{table}
