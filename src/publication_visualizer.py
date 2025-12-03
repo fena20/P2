@@ -110,10 +110,11 @@ class ResultVisualizer:
         ax1_temp = ax1.twinx()
         
         # Plot compressor state (left y-axis)
-        ax1.step(time_hours, baseline_window['action'].values, 
+        action_baseline = baseline_window['action'].values.astype(float)
+        ax1.step(time_hours, action_baseline, 
                  where='post', color='#d62728', linewidth=2, 
                  label='Compressor State', alpha=0.8)
-        ax1.fill_between(time_hours, 0, baseline_window['action'].values, 
+        ax1.fill_between(time_hours, 0, action_baseline, 
                           step='post', color='#d62728', alpha=0.2)
         
         # Plot indoor temperature (right y-axis)
@@ -148,10 +149,11 @@ class ResultVisualizer:
         ax2_temp = ax2.twinx()
         
         # Plot compressor state (left y-axis)
-        ax2.step(time_hours, agent_window['action'].values, 
+        action_agent = agent_window['action'].values.astype(float)
+        ax2.step(time_hours, action_agent, 
                  where='post', color='#2ca02c', linewidth=2, 
                  label='Compressor State', alpha=0.8)
-        ax2.fill_between(time_hours, 0, agent_window['action'].values, 
+        ax2.fill_between(time_hours, 0, action_agent, 
                           step='post', color='#2ca02c', alpha=0.2)
         
         # Plot indoor temperature (right y-axis)
@@ -451,10 +453,9 @@ class ResultVisualizer:
                          extent=[0, 7, 0, 24])
         
         # Add peak pricing overlay
-        ax1.axhspan(17, 20, color='red', alpha=0.2, linestyle='--', 
-                    linewidth=0, label='Peak Price Period')
-        ax1.plot([0, 7], [17, 17], 'r--', linewidth=2, alpha=0.7)
-        ax1.plot([0, 7], [20, 20], 'r--', linewidth=2, alpha=0.7)
+        ax1.axhspan(17, 20, color='red', alpha=0.2, label='Peak Price Period')
+        ax1.plot([0, 7], [17, 17], 'r-', linewidth=2, alpha=0.7, linestyle='dashed')
+        ax1.plot([0, 7], [20, 20], 'r-', linewidth=2, alpha=0.7, linestyle='dashed')
         
         ax1.set_xlabel('Day of Week', fontsize=12)
         ax1.set_ylabel('Hour of Day', fontsize=12)
@@ -474,11 +475,10 @@ class ResultVisualizer:
                          extent=[0, 7, 0, 24])
         
         # Add peak pricing overlay
-        ax2.axhspan(17, 20, color='red', alpha=0.2, linestyle='--', 
-                    linewidth=0)
-        ax2.plot([0, 7], [17, 17], 'r--', linewidth=2, alpha=0.7, 
+        ax2.axhspan(17, 20, color='red', alpha=0.2)
+        ax2.plot([0, 7], [17, 17], 'r-', linewidth=2, alpha=0.7, linestyle='dashed',
                  label='Peak Price Period')
-        ax2.plot([0, 7], [20, 20], 'r--', linewidth=2, alpha=0.7)
+        ax2.plot([0, 7], [20, 20], 'r-', linewidth=2, alpha=0.7, linestyle='dashed')
         
         ax2.set_xlabel('Day of Week', fontsize=12)
         ax2.set_ylabel('Hour of Day', fontsize=12)

@@ -1,0 +1,4 @@
+Configuration,Cycling Penalty,Cost ($),Discomfort (°C·h),Switches/day,Hardware Risk,Overall Score
+Baseline Thermostat,N/A,7.00,30315.07,17,LOW ✓,3034.65
+DRL w/o Cycling Penalty,✗,5.27,31418.91,5,LOW ✓,3143.50
+PI-DRL (Full Model),✓,0.00,45863.86,0,LOW ✓,4586.39

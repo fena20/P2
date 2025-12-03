@@ -1,0 +1,31 @@
+\begin{table}
+\caption{Simulation Parameters and Hyperparameters for Reproducibility}
+\label{tab:parameters}
+\begin{tabular}{llcccp{5cm}}
+\toprule
+Category & Parameter & Symbol & Value & Unit & Description \\
+\midrule
+Building Physics & Thermal Resistance & R & 10.00 & K/kW & Building envelope thermal resistance \\
+Building Physics & Thermal Capacitance & C & 20.00 & kWh/K & Building thermal mass \\
+Building Physics & HVAC Power & P_HVAC & 3.00 & kW & Heat pump rated power \\
+Building Physics & Time Step & Δt & 1.00 & minutes & Simulation time resolution \\
+Building Physics & Comfort Min Temp & T_min & 20.00 & °C & Lower comfort boundary \\
+Building Physics & Comfort Max Temp & T_max & 24.00 & °C & Upper comfort boundary \\
+Reward Function & Cost Weight & w_1 & 1.00 & - & Economic objective weight \\
+Reward Function & Comfort Weight & w_2 & 10.00 & - & Thermal comfort weight \\
+Reward Function & Cycling Weight & w_3 & 5.00 & - & Hardware protection weight (NOVELTY) \\
+Reward Function & Min Cycle Time & t_cycle & 15 & minutes & Minimum time between switching \\
+PPO Algorithm & Learning Rate & α & 3.00e-04 & - & Adam optimizer learning rate \\
+PPO Algorithm & Discount Factor & γ & 0.990 & - & Future reward discount \\
+PPO Algorithm & GAE Lambda & λ & 0.950 & - & Generalized Advantage Estimation \\
+PPO Algorithm & Clip Range & ε & 0.200 & - & PPO clipping parameter \\
+PPO Algorithm & Entropy Coef & c_ent & 0.010 & - & Exploration bonus coefficient \\
+PPO Algorithm & Batch Size & B & 64 & samples & Mini-batch size for updates \\
+PPO Algorithm & Steps per Update & N & 2048 & steps & Rollout buffer size \\
+PPO Algorithm & Epochs per Update & E & 10 & epochs & Optimization epochs per rollout \\
+Neural Network & Policy Network & π(s) & [128, 128] & neurons & Actor network architecture \\
+Neural Network & Value Network & V(s) & [128, 128] & neurons & Critic network architecture \\
+Neural Network & Activation & φ & ReLU & - & Neural network activation function \\
+\bottomrule
+\end{tabular}
+\end{table}

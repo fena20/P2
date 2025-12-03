@@ -203,7 +203,7 @@ class PI_DRL_Trainer:
         self.model.learn(
             total_timesteps=total_timesteps,
             callback=[checkpoint_callback, eval_callback, metrics_callback],
-            progress_bar=True
+            progress_bar=False
         )
         
         # Save final model
