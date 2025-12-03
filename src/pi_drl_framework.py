@@ -853,7 +853,7 @@ class ResultVisualizer:
         Returns:
             Path to saved figure
         """
-        fig, axes = plt.subplots(2, 1, figsize=(10, 6), sharex=True)
+        fig, axes = plt.subplots(2, 1, figsize=(12, 7), sharex=True)
         
         window_minutes = int(window_hours * 60)
         end_minute = start_minute + window_minutes
@@ -878,30 +878,30 @@ class ResultVisualizer:
         ax1_twin = ax1.twinx()
         
         # Compressor state (step plot)
-        ax1.step(time_range, baseline_action, where='post', 
-                color=self.colors['baseline'], linewidth=2, label='Compressor State')
+        line1, = ax1.step(time_range, baseline_action, where='post', 
+                color=self.colors['baseline'], linewidth=2.5, label='Compressor (Baseline)')
         ax1.fill_between(time_range, baseline_action, step='post', 
                         alpha=0.3, color=self.colors['baseline'])
         
         # Indoor temperature
-        ax1_twin.plot(time_range, baseline_temp, color=self.colors['neutral'], 
-                     linewidth=2, linestyle='--', label='Indoor Temp')
+        line2, = ax1_twin.plot(time_range, baseline_temp, color=self.colors['neutral'], 
+                     linewidth=2, linestyle='--', label='Indoor Temperature')
         
         # Comfort zone shading
-        ax1_twin.axhspan(20, 22, alpha=0.2, color=self.colors['comfort_zone'], 
-                        label='Comfort Zone')
+        comfort_patch = ax1_twin.axhspan(20, 22, alpha=0.15, color=self.colors['comfort_zone'], 
+                        label='Comfort Zone (20-22°C)')
         
-        ax1.set_ylabel('Compressor State\n(OFF/ON)', fontweight='bold', 
+        ax1.set_ylabel('Compressor State', fontweight='bold', fontsize=11,
                       color=self.colors['baseline'])
-        ax1_twin.set_ylabel('Indoor Temperature (°C)', fontweight='bold',
+        ax1_twin.set_ylabel('Indoor Temperature (°C)', fontweight='bold', fontsize=11,
                            color=self.colors['neutral'])
         ax1.set_ylim(-0.1, 1.1)
         ax1.set_yticks([0, 1])
         ax1.set_yticklabels(['OFF', 'ON'])
-        ax1_twin.set_ylim(18, 24)
+        ax1_twin.set_ylim(17, 25)
         
         ax1.set_title(f'(a) Baseline Thermostat — {baseline_switches} switching events', 
-                     fontweight='bold', fontsize=12)
+                     fontweight='bold', fontsize=12, pad=10)
         
         # ------------------
         # SUBPLOT 2: PI-DRL AGENT
@@ -910,43 +910,49 @@ class ResultVisualizer:
         ax2_twin = ax2.twinx()
         
         # Compressor state (step plot)
-        ax2.step(time_range, pidrl_action, where='post', 
-                color=self.colors['pi_drl'], linewidth=2, label='Compressor State')
+        line3, = ax2.step(time_range, pidrl_action, where='post', 
+                color=self.colors['pi_drl'], linewidth=2.5, label='Compressor (PI-DRL)')
         ax2.fill_between(time_range, pidrl_action, step='post', 
                         alpha=0.3, color=self.colors['pi_drl'])
         
         # Indoor temperature
-        ax2_twin.plot(time_range, pidrl_temp, color=self.colors['neutral'], 
-                     linewidth=2, linestyle='--', label='Indoor Temp')
+        line4, = ax2_twin.plot(time_range, pidrl_temp, color=self.colors['neutral'], 
+                     linewidth=2, linestyle='--', label='Indoor Temperature')
         
         # Comfort zone shading
-        ax2_twin.axhspan(20, 22, alpha=0.2, color=self.colors['comfort_zone'])
+        ax2_twin.axhspan(20, 22, alpha=0.15, color=self.colors['comfort_zone'])
         
-        ax2.set_ylabel('Compressor State\n(OFF/ON)', fontweight='bold',
+        ax2.set_ylabel('Compressor State', fontweight='bold', fontsize=11,
                       color=self.colors['pi_drl'])
-        ax2_twin.set_ylabel('Indoor Temperature (°C)', fontweight='bold',
+        ax2_twin.set_ylabel('Indoor Temperature (°C)', fontweight='bold', fontsize=11,
                            color=self.colors['neutral'])
         ax2.set_ylim(-0.1, 1.1)
         ax2.set_yticks([0, 1])
         ax2.set_yticklabels(['OFF', 'ON'])
-        ax2_twin.set_ylim(18, 24)
+        ax2_twin.set_ylim(17, 25)
         
         ax2.set_title(f'(b) PI-DRL Agent — {pidrl_switches} switching events', 
-                     fontweight='bold', fontsize=12)
-        ax2.set_xlabel('Time (minutes)', fontweight='bold')
+                     fontweight='bold', fontsize=12, pad=10)
+        ax2.set_xlabel('Time (minutes)', fontweight='bold', fontsize=11)
         
-        # Legend
+        # Create unified legend at bottom
         legend_elements = [
-            Line2D([0], [0], color=self.colors['baseline'], linewidth=2, label='Baseline'),
-            Line2D([0], [0], color=self.colors['pi_drl'], linewidth=2, label='PI-DRL'),
+            Line2D([0], [0], color=self.colors['baseline'], linewidth=2.5, 
+                  label='Compressor State (Baseline)'),
+            Line2D([0], [0], color=self.colors['pi_drl'], linewidth=2.5, 
+                  label='Compressor State (PI-DRL)'),
             Line2D([0], [0], color=self.colors['neutral'], linewidth=2, 
-                  linestyle='--', label='Indoor Temp'),
-            mpatches.Patch(color=self.colors['comfort_zone'], alpha=0.3, label='Comfort Zone')
+                  linestyle='--', label='Indoor Temperature'),
+            mpatches.Patch(color=self.colors['comfort_zone'], alpha=0.3, 
+                          label='Comfort Zone (20-22°C)')
         ]
-        fig.legend(handles=legend_elements, loc='upper right', 
-                  bbox_to_anchor=(0.98, 0.98), framealpha=0.9)
+        
+        fig.legend(handles=legend_elements, loc='lower center', 
+                  bbox_to_anchor=(0.5, -0.02), ncol=4, framealpha=0.95,
+                  fontsize=10, edgecolor='gray')
         
         plt.tight_layout()
+        plt.subplots_adjust(bottom=0.12)
         
         filepath = os.path.join(self.save_dir, save_name)
         plt.savefig(filepath, dpi=300, bbox_inches='tight')
@@ -977,7 +983,7 @@ class ResultVisualizer:
         Returns:
             Path to saved figure
         """
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(11, 7))
         
         hours = np.arange(24)
         temps = np.linspace(-5, 35, policy_data.shape[0])
@@ -987,36 +993,47 @@ class ResultVisualizer:
                       origin='lower', vmin=0, vmax=1,
                       extent=[0, 24, -5, 35])
         
-        # Colorbar
-        cbar = plt.colorbar(im, ax=ax, label='P(Action = ON)', pad=0.02)
+        # Colorbar - properly positioned
+        cbar = plt.colorbar(im, ax=ax, pad=0.02, shrink=0.9)
+        cbar.set_label('P(Action = ON)', fontweight='bold', fontsize=11)
         cbar.ax.tick_params(labelsize=10)
         
-        # Peak price annotation
-        ax.axvspan(17, 20, alpha=0.3, color='red', label='Peak Price Hours')
-        ax.text(18.5, 33, 'PEAK\nPRICE', ha='center', va='top', fontsize=10,
-               fontweight='bold', color='darkred',
-               bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+        # Peak price annotation - vertical band
+        peak_patch = ax.axvspan(17, 20, alpha=0.25, color='red', 
+                               label='Peak Price Hours (17:00-20:00)')
         
-        # Demand response annotation
-        ax.annotate('Demand Response:\nAgent stays OFF\nduring peak hours',
-                   xy=(18, 25), xytext=(22, 10),
-                   fontsize=9,
-                   arrowprops=dict(arrowstyle='->', color='black'),
-                   bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.9))
+        # Peak price text box - positioned at top
+        ax.text(18.5, 37, 'PEAK PRICE\n(17:00-20:00)', ha='center', va='bottom', 
+               fontsize=10, fontweight='bold', color='darkred',
+               bbox=dict(boxstyle='round,pad=0.3', facecolor='white', 
+                        edgecolor='darkred', alpha=0.95))
+        
+        # Demand response annotation - positioned clearly
+        ax.annotate('Demand Response:\nAgent learns to reduce\nON probability\nduring peak hours',
+                   xy=(18.5, 15), xytext=(3, 8),
+                   fontsize=9, fontweight='bold',
+                   arrowprops=dict(arrowstyle='->', color='black', lw=1.5),
+                   bbox=dict(boxstyle='round,pad=0.4', facecolor='lightyellow', 
+                            edgecolor='orange', alpha=0.95))
         
         # Labels
-        ax.set_xlabel('Hour of Day', fontweight='bold')
-        ax.set_ylabel('Outdoor Temperature (°C)', fontweight='bold')
+        ax.set_xlabel('Hour of Day', fontweight='bold', fontsize=12)
+        ax.set_ylabel('Outdoor Temperature (°C)', fontweight='bold', fontsize=12)
         ax.set_title('Figure 2: Learned Control Policy — P(Compressor ON)',
-                    fontweight='bold', fontsize=13)
+                    fontweight='bold', fontsize=13, pad=15)
         
         # Ticks
-        ax.set_xticks(np.arange(0, 25, 3))
+        ax.set_xticks(np.arange(0, 25, 2))
         ax.set_yticks(np.arange(-5, 36, 5))
+        ax.set_xlim(0, 24)
+        ax.set_ylim(-5, 35)
         
-        ax.legend(loc='lower left')
+        # Legend at bottom
+        ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.12), 
+                 fontsize=10, framealpha=0.95)
         
         plt.tight_layout()
+        plt.subplots_adjust(bottom=0.15)
         
         filepath = os.path.join(self.save_dir, save_name)
         plt.savefig(filepath, dpi=300, bbox_inches='tight')
@@ -1050,8 +1067,8 @@ class ResultVisualizer:
             Path to saved figure
         """
         # Metrics
-        categories = ['Energy\nCost', 'Comfort\nViolation', 'Equipment\nCycles', 
-                     'Peak\nLoad', 'Carbon\nEmissions']
+        categories = ['Energy Cost', 'Comfort\nViolation', 'Equipment\nCycles', 
+                     'Peak Load', 'Carbon\nEmissions']
         
         baseline_values = [
             baseline_metrics.get('energy_cost', 100),
@@ -1080,18 +1097,19 @@ class ResultVisualizer:
         baseline_values += baseline_values[:1]
         pidrl_values += pidrl_values[:1]
         
-        # Create figure
-        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+        # Create figure with extra space for legend
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, polar=True)
         
         # Plot baseline
-        ax.plot(angles, baseline_values, 'o-', linewidth=2, 
-               color=self.colors['baseline'], label='Baseline')
-        ax.fill(angles, baseline_values, alpha=0.25, color=self.colors['baseline'])
+        ax.plot(angles, baseline_values, 'o-', linewidth=2.5, markersize=8,
+               color=self.colors['baseline'], label='Baseline (100%)')
+        ax.fill(angles, baseline_values, alpha=0.2, color=self.colors['baseline'])
         
         # Plot PI-DRL
-        ax.plot(angles, pidrl_values, 'o-', linewidth=2,
-               color=self.colors['pi_drl'], label='PI-DRL')
-        ax.fill(angles, pidrl_values, alpha=0.25, color=self.colors['pi_drl'])
+        ax.plot(angles, pidrl_values, 's-', linewidth=2.5, markersize=8,
+               color=self.colors['pi_drl'], label='PI-DRL (Proposed)')
+        ax.fill(angles, pidrl_values, alpha=0.2, color=self.colors['pi_drl'])
         
         # Set axis labels
         ax.set_xticks(angles[:-1])
@@ -1100,32 +1118,40 @@ class ResultVisualizer:
         # Y-axis
         ax.set_ylim(0, 120)
         ax.set_yticks([25, 50, 75, 100])
-        ax.set_yticklabels(['25%', '50%', '75%', '100%'], fontsize=9)
+        ax.set_yticklabels(['25%', '50%', '75%', '100%'], fontsize=9, color='gray')
         
         # Grid
-        ax.grid(True, linestyle='--', alpha=0.6)
-        
-        # Legend
-        ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1.0), fontsize=11)
+        ax.grid(True, linestyle='--', alpha=0.5, color='gray')
         
         # Title
         ax.set_title('Figure 3: Multi-Objective Performance Comparison\n(Lower is Better)',
-                    fontweight='bold', fontsize=13, pad=20)
+                    fontweight='bold', fontsize=13, pad=25)
         
-        # Add improvement annotations
+        # Calculate improvements
         improvements = []
-        for i, cat in enumerate(categories[:-1]):  # Skip last duplicate
+        for i in range(len(categories)):
             if baseline_values[i] > 0:
                 imp = (baseline_values[i] - pidrl_values[i]) / baseline_values[i] * 100
-                improvements.append(f"{cat.replace(chr(10), ' ')}: {imp:.0f}%↓")
+                cat_name = categories[i].replace('\n', ' ')
+                if imp > 0:
+                    improvements.append(f"{cat_name}: {imp:.0f}%↓")
+                else:
+                    improvements.append(f"{cat_name}: {abs(imp):.0f}%↑")
         
-        # Text box with improvements
-        textstr = 'Improvements:\n' + '\n'.join(improvements)
-        props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
-        ax.text(1.4, 0.3, textstr, transform=ax.transAxes, fontsize=9,
-               verticalalignment='top', bbox=props)
+        # Legend positioned below the chart
+        legend = ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.08), 
+                          ncol=2, fontsize=11, framealpha=0.95,
+                          edgecolor='gray')
+        
+        # Text box with improvements - positioned to the right
+        textstr = 'PI-DRL Improvements:\n' + '\n'.join(improvements)
+        props = dict(boxstyle='round,pad=0.5', facecolor='lightgreen', 
+                    edgecolor='green', alpha=0.9)
+        fig.text(0.92, 0.5, textstr, fontsize=9, verticalalignment='center',
+                bbox=props, transform=fig.transFigure)
         
         plt.tight_layout()
+        plt.subplots_adjust(right=0.75, bottom=0.15)
         
         filepath = os.path.join(self.save_dir, save_name)
         plt.savefig(filepath, dpi=300, bbox_inches='tight')
@@ -1172,15 +1198,14 @@ class ResultVisualizer:
                         origin='lower', vmin=vmin, vmax=vmax,
                         extent=[0, baseline_power.shape[0], 0, 24])
         
-        # Peak hours overlay
-        ax1.axhspan(17, 20, alpha=0.3, color='red', 
-                   label='Peak Price (17:00-20:00)')
+        # Peak hours overlay with hatching
+        ax1.axhspan(17, 20, alpha=0.2, color='blue', hatch='///',
+                   label='Peak Price Hours (17:00-20:00)')
         
-        ax1.set_xlabel('Day of Year', fontweight='bold')
-        ax1.set_ylabel('Hour of Day', fontweight='bold')
-        ax1.set_title('(a) Baseline Controller', fontweight='bold', fontsize=12)
+        ax1.set_xlabel('Day of Year', fontweight='bold', fontsize=11)
+        ax1.set_ylabel('Hour of Day', fontweight='bold', fontsize=11)
+        ax1.set_title('(a) Baseline Controller', fontweight='bold', fontsize=12, pad=10)
         ax1.set_yticks(np.arange(0, 25, 4))
-        ax1.legend(loc='upper right')
         
         # ------------------
         # RIGHT: OPTIMIZED (PI-DRL)
@@ -1190,31 +1215,43 @@ class ResultVisualizer:
                         origin='lower', vmin=vmin, vmax=vmax,
                         extent=[0, optimized_power.shape[0], 0, 24])
         
-        # Peak hours overlay
-        ax2.axhspan(17, 20, alpha=0.3, color='red')
+        # Peak hours overlay with hatching
+        ax2.axhspan(17, 20, alpha=0.2, color='blue', hatch='///')
         
-        ax2.set_xlabel('Day of Year', fontweight='bold')
-        ax2.set_ylabel('Hour of Day', fontweight='bold')
-        ax2.set_title('(b) PI-DRL Controller (Load Shifting)', fontweight='bold', fontsize=12)
+        ax2.set_xlabel('Day of Year', fontweight='bold', fontsize=11)
+        ax2.set_ylabel('Hour of Day', fontweight='bold', fontsize=11)
+        ax2.set_title('(b) PI-DRL Controller', fontweight='bold', fontsize=12, pad=10)
         ax2.set_yticks(np.arange(0, 25, 4))
         
-        # Shared colorbar
-        cbar = fig.colorbar(im2, ax=axes, orientation='vertical', 
-                           pad=0.02, shrink=0.8)
-        cbar.set_label('HVAC Power Consumption (kW)', fontweight='bold')
-        
-        # Annotation for load shifting
-        ax2.annotate('Load shifted\nto off-peak hours',
-                    xy=(baseline_power.shape[0]*0.7, 14),
-                    xytext=(baseline_power.shape[0]*0.8, 8),
+        # Annotation for load shifting - positioned better
+        ax2.annotate('Load shifted to\noff-peak hours',
+                    xy=(baseline_power.shape[0]*0.5, 12),
+                    xytext=(baseline_power.shape[0]*0.15, 5),
                     fontsize=10, fontweight='bold',
-                    arrowprops=dict(arrowstyle='->', color='darkgreen'),
-                    bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.8))
+                    arrowprops=dict(arrowstyle='->', color='darkgreen', lw=2),
+                    bbox=dict(boxstyle='round,pad=0.4', facecolor='lightgreen', 
+                             edgecolor='green', alpha=0.95))
         
-        plt.suptitle('Figure 4: Energy Carpet Plot — HVAC Load Shifting Analysis',
-                    fontweight='bold', fontsize=14, y=1.02)
+        # Shared colorbar - properly positioned
+        cbar_ax = fig.add_axes([0.92, 0.15, 0.02, 0.7])
+        cbar = fig.colorbar(im2, cax=cbar_ax)
+        cbar.set_label('HVAC Power (kW)', fontweight='bold', fontsize=11)
+        cbar.ax.tick_params(labelsize=10)
+        
+        # Main title
+        fig.suptitle('Figure 4: Energy Carpet Plot — HVAC Load Shifting Analysis',
+                    fontweight='bold', fontsize=14, y=0.98)
+        
+        # Legend at bottom
+        legend_elements = [
+            mpatches.Patch(facecolor='blue', alpha=0.2, hatch='///',
+                          label='Peak Price Hours (17:00-20:00)'),
+        ]
+        fig.legend(handles=legend_elements, loc='lower center', 
+                  bbox_to_anchor=(0.45, 0.02), fontsize=10, framealpha=0.95)
         
         plt.tight_layout()
+        plt.subplots_adjust(right=0.90, bottom=0.12, top=0.92)
         
         filepath = os.path.join(self.save_dir, save_name)
         plt.savefig(filepath, dpi=300, bbox_inches='tight')
