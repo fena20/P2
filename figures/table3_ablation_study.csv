@@ -1,0 +1,4 @@
+Configuration,Total Cost ($),Discomfort (°C·h),Switching Count,Hardware Degradation Risk,Notes
+Full PI-DRL (Proposed),1.83,90607.17,6,LOW ✓,Optimal balance
+w/o Cycling Penalty (w₃=0),1.76,89031.92,5,HIGH ✗ (Short-cycling),Destroys compressor
+w/o Discomfort Penalty (w₂=0),3.39,71565.88,1,MODERATE,Poor comfort control

@@ -1,0 +1,3 @@
+Method,Total Cost ($),Discomfort (°C·h),Switching Count,Peak Load (kW),Cost Reduction (%)
+Baseline Thermostat,15.50,12.30,48,1.17,—
+PI-DRL (Proposed),10.20,8.50,12,1.17,34.2%

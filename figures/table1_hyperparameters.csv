@@ -1,0 +1,24 @@
+Category,Parameter,Value
+Building Physics,Thermal Resistance R,2.0 °C/kW
+Building Physics,Thermal Capacitance C,10.0 kWh/°C
+Building Physics,HVAC Power Q_hvac,3.5 kW
+Building Physics,COP η,3.0
+Building Physics,Temperature Setpoint,21.0 °C
+Building Physics,Deadband,±1.0 °C
+Building Physics,Cost Weight w1,1.0
+Building Physics,Discomfort Weight w2,2.0
+Building Physics,Cycling Weight w3,0.5
+Building Physics,Min ON/OFF Time,15 min
+Building Physics,Time Step Δt,1.0 min
+Building Physics,Episode Length,1440 steps (24 hours)
+PPO Algorithm,Learning Rate α,3e-4
+PPO Algorithm,Discount Factor γ,0.99
+PPO Algorithm,GAE Lambda λ,0.95
+PPO Algorithm,Clip Range ε,0.2
+PPO Algorithm,Entropy Coefficient,0.01
+PPO Algorithm,Value Function Coefficient,0.5
+PPO Algorithm,Batch Size,64
+PPO Algorithm,N Steps,2048
+PPO Algorithm,N Epochs,10
+PPO Algorithm,Network Architecture,"[128, 128] (Actor & Critic)"
+PPO Algorithm,Activation Function,Tanh
