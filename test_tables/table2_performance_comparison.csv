@@ -1,0 +1,4 @@
+Method,Total Cost ($),Discomfort (Degree-Hours),Switching Count (Cycles)
+Baseline Thermostat,120.50,45.20,150
+PI-DRL Agent,85.30,28.50,60
+Improvement (%),29.2%,36.9%,60.0%

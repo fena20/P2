@@ -379,23 +379,53 @@ class ResultVisualizer:
         
         # Reshape to (days, hours) - assuming 1-minute resolution
         # Convert to hourly averages
-        n_days = int(len(time_hours) / 24)
-        if n_days == 0:
-            n_days = 1
+        n_samples = len(baseline_power)
         
-        # Resample to hourly (if needed)
-        if len(baseline_power) > n_days * 24:
-            # Downsample to hourly
-            hourly_indices = np.arange(0, len(baseline_power), 60)  # Every 60 minutes
-            baseline_hourly = baseline_power[hourly_indices[:n_days*24]]
-            pi_drl_hourly = pi_drl_power[hourly_indices[:n_days*24]]
+        # If we have minute-level data, resample to hourly
+        if n_samples > 24:
+            # Downsample to hourly (take every 60th sample, or average)
+            hourly_size = min(24, n_samples // 60 if n_samples >= 60 else n_samples)
+            if n_samples >= 60:
+                # Average every 60 samples to get hourly data
+                baseline_hourly = []
+                pi_drl_hourly = []
+                for i in range(0, min(n_samples, hourly_size * 60), 60):
+                    end_idx = min(i + 60, n_samples)
+                    baseline_hourly.append(np.mean(baseline_power[i:end_idx]))
+                    pi_drl_hourly.append(np.mean(pi_drl_power[i:end_idx]))
+                baseline_hourly = np.array(baseline_hourly)
+                pi_drl_hourly = np.array(pi_drl_hourly)
+            else:
+                # If less than 60 samples, just use as is
+                baseline_hourly = baseline_power[:hourly_size]
+                pi_drl_hourly = pi_drl_power[:hourly_size]
         else:
-            baseline_hourly = baseline_power[:n_days*24]
-            pi_drl_hourly = pi_drl_power[:n_days*24]
+            baseline_hourly = baseline_power[:24]
+            pi_drl_hourly = pi_drl_power[:24]
+        
+        # Ensure we have at least one day
+        n_hours = len(baseline_hourly)
+        if n_hours < 24:
+            # Pad to 24 hours
+            baseline_hourly = np.pad(baseline_hourly, (0, 24 - n_hours), mode='constant')
+            pi_drl_hourly = np.pad(pi_drl_hourly, (0, 24 - n_hours), mode='constant')
+            n_hours = 24
+        
+        # Reshape to (days, 24 hours) - at least 1 day
+        n_days = max(1, n_hours // 24)
+        total_hours = n_days * 24
+        
+        # Pad or truncate to fit exactly
+        if len(baseline_hourly) < total_hours:
+            baseline_hourly = np.pad(baseline_hourly, (0, total_hours - len(baseline_hourly)), mode='constant')
+            pi_drl_hourly = np.pad(pi_drl_hourly, (0, total_hours - len(pi_drl_hourly)), mode='constant')
+        else:
+            baseline_hourly = baseline_hourly[:total_hours]
+            pi_drl_hourly = pi_drl_hourly[:total_hours]
         
         # Reshape to (days, 24 hours)
-        baseline_2d = baseline_hourly[:n_days*24].reshape(n_days, 24)
-        pi_drl_2d = pi_drl_hourly[:n_days*24].reshape(n_days, 24)
+        baseline_2d = baseline_hourly.reshape(n_days, 24)
+        pi_drl_2d = pi_drl_hourly.reshape(n_days, 24)
         
         # Plot Baseline
         im1 = axes[0].imshow(baseline_2d.T, aspect='auto', origin='lower', 

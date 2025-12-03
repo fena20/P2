@@ -241,7 +241,7 @@ def main(
     run_ablation: bool = True,
     total_timesteps: int = 200000,
     n_eval_episodes: int = 10,
-    save_dir: str = "./results/pi_drl"
+    save_dir: str = "./output"
 ):
     """
     Main execution function.
