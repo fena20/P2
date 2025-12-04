@@ -1,0 +1,18 @@
+Parameter,Value
+R_i (K/W),0.0005
+R_w (K/W),0.0030
+R_o (K/W),0.0020
+C_in (J/K),500000
+C_m (J/K),2000000
+Lockout Time (min),15
+Setpoint (°C),21.0
+Deadband (°C),1.5
+Q_HVAC (kW),4.0
+dt (s),60
+PPO Learning Rate,0.0003
+PPO Gamma,0.99
+PPO n_steps,2048
+PPO batch_size,64
+λ_cost,0.5
+λ_discomfort,1.0
+λ_penalty,1.0
