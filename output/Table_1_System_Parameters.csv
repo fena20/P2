@@ -1,0 +1,16 @@
+Parameter,Value,Unit
+R_i (Indoor-Mass Resistance),0.5,°C/kW
+R_w (Mass-Outdoor Resistance),0.3,°C/kW
+R_o (Indoor-Outdoor Resistance),0.2,°C/kW
+C_in (Indoor Capacitance),20.0,kWh/°C
+C_m (Mass Capacitance),50.0,kWh/°C
+Q_hvac (Heating Power),4.0,kW
+Lockout Time,15,minutes
+Setpoint Temperature,21.0,°C
+Deadband,±1.5,°C
+PPO Learning Rate,3e-4,-
+PPO Batch Size,64,-
+PPO Gamma,0.99,-
+Reward: lambda_cost,1.0,-
+Reward: lambda_discomfort,50.0,-
+Reward: lambda_penalty,10.0,-
