@@ -9,10 +9,14 @@ Setpoint (°C),21.0
 Deadband (°C),1.5
 Q_HVAC (kW),4.0
 dt (s),60
-PPO Learning Rate,0.0003
+PPO Learning Rate,0.0001
 PPO Gamma,0.99
+PPO gae_lambda,0.95
+PPO clip_range,0.15
 PPO n_steps,2048
 PPO batch_size,64
-λ_cost,0.5
-λ_discomfort,1.0
-λ_penalty,1.0
+w_cost,1.0
+w_disc,1.0
+w_switch,0.2
+w_peak,1.0
+w_invalid,0.5

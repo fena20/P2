@@ -1,5 +1,5 @@
 Metric,Baseline,PI-DRL,Improvement (%)
-Total Cost ($),36.02,40.06,-11.2
-Total Discomfort (°C²·h),107.97,147.59,-36.7
-Total Cycles,122,260,-113.1
-Total Energy (kWh),265.53,283.53,-6.8
+Total Cost ($),36.13,31.03,14.1
+Total Discomfort (°C²·h),107.16,601.22,-461.1
+Total Cycles,123,192,-56.1
+Total Energy (kWh),264.80,274.40,-3.6

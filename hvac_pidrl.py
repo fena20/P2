@@ -72,6 +72,7 @@ class Config:
     
     # HVAC
     Q_hvac_max: float = 4000.0  # Heating power (W) = 4 kW
+    Q_hvac_kw: float = 4.0  # Heating power (kW)
     dt: float = 60.0  # Time step (seconds)
     
     # Thermostat
@@ -85,27 +86,41 @@ class Config:
     peak_price: float = 0.30  # $/kWh during peak (16:00-21:00)
     offpeak_price: float = 0.10  # $/kWh off-peak
     
-    # Domain Randomization
-    param_variation: float = 0.15  # ±15% variation for R and C parameters
+    # Domain Randomization (curriculum: 0.0 -> 0.10 -> 0.15)
+    randomization_scale: float = 0.0  # Current scale (0.0, 0.10, or 0.15)
     
     # Training
-    total_timesteps: int = 200000  # Training steps
+    total_timesteps: int = 600000  # Total timesteps across all curriculum phases (increased)
     episode_length_days: int = 1  # 1-day episodes
     train_split: float = 0.8
     
-    # Reward Weights (comfort-first approach)
-    lambda_cost: float = 0.5  # Only applies during peak when comfortable
-    lambda_discomfort: float = 1.0  # Not used in new reward
-    lambda_penalty: float = 1.0  # Not used in new reward
+    # Normalized Reward Weights (configurable) - per specification
+    # All weights = 1.0, normalization scales handle the balance
+    w_cost: float = 1.0  # Energy cost weight
+    w_disc: float = 1.0  # Discomfort weight
+    w_switch: float = 0.2  # Action switching weight
+    w_peak: float = 1.0  # Peak hour penalty
+    w_invalid: float = 0.5  # Invalid action penalty weight
     
-    # PPO Hyperparameters
-    learning_rate: float = 3e-4  # Standard PPO learning rate
+    # Normalization scales - carefully calibrated
+    # Cost: ~0.007$/step -> scale=0.01 gives O(1)
+    # Discomfort at 2°C deviation: 4*1/60=0.067 -> scale=0.05 gives ~1.3
+    # This makes discomfort penalty comparable to cost when slightly off setpoint
+    # but much larger when far off setpoint (quadratic)
+    cost_scale: float = 0.01
+    disc_scale: float = 0.05  # balanced for stable learning
+    switch_scale: float = 1.0
+    peak_scale: float = 0.01
+    
+    # PPO Hyperparameters (tuned)
+    learning_rate: float = 1e-4  # Reduced from 3e-4
     gamma: float = 0.99  # Standard discount
+    gae_lambda: float = 0.95  # GAE lambda
     n_steps: int = 2048
     batch_size: int = 64
     n_epochs: int = 10
-    ent_coef: float = 0.01  # Standard entropy
-    clip_range: float = 0.2
+    ent_coef: float = 0.05  # Increased entropy for more exploration
+    clip_range: float = 0.15  # Reduced from 0.2
     
     # Observation Noise
     obs_noise_std: float = 0.1  # Gaussian noise std for T_in observation
@@ -403,14 +418,15 @@ class SafetyHVACEnv(gym.Env):
     """
     2R2C Physics-Informed HVAC Environment with Safety Constraints.
     
-    State: [T_in_obs, T_out, T_mass, Price, time_sin, time_cos]
+    State: [T_in_obs, T_out, T_mass, Price, time_sin, time_cos, mask_off, mask_on]
     Action: Discrete {0: OFF, 1: ON}
     
     Features:
     - 2R2C thermal dynamics (indoor air + building mass)
-    - Domain randomization for training robustness
-    - Safety layer with 15-minute lockout
+    - Domain randomization for training robustness (curriculum)
+    - Safety layer with 15-minute lockout integrated via action mask
     - Gaussian observation noise on T_in
+    - Normalized multi-term reward
     """
     
     metadata = {"render_modes": ["human"]}
@@ -422,7 +438,8 @@ class SafetyHVACEnv(gym.Env):
         is_training: bool = True,
         use_domain_randomization: bool = True,
         start_idx: Optional[int] = None,
-        end_idx: Optional[int] = None
+        end_idx: Optional[int] = None,
+        randomization_scale: Optional[float] = None
     ):
         super().__init__()
         
@@ -431,16 +448,21 @@ class SafetyHVACEnv(gym.Env):
         self.is_training = is_training
         self.use_domain_randomization = use_domain_randomization and is_training
         
+        # Curriculum: use provided scale or config default
+        self.randomization_scale = randomization_scale if randomization_scale is not None else config.randomization_scale
+        
         # Data range
         self.start_idx = start_idx if start_idx is not None else 0
         self.end_idx = end_idx if end_idx is not None else len(data)
         self.episode_length = config.episode_length_days * 24 * 60  # in minutes
         
-        # State space: [T_in_norm, T_out_norm, T_mass_norm, Price_norm, time_sin, time_cos]
+        # State space: [T_in_norm, T_out_norm, T_mass_norm, Price_norm, time_sin, time_cos, mask_off, mask_on]
         # All normalized to roughly [-1, 1] or [0, 1] range
+        # mask_off: 1.0 if OFF allowed, 0.0 if forbidden
+        # mask_on: 1.0 if ON allowed, 0.0 if forbidden
         self.observation_space = spaces.Box(
-            low=np.array([-1.5, -1.5, -1.5, 0.0, -1.0, -1.0], dtype=np.float32),
-            high=np.array([1.5, 1.5, 1.5, 1.5, 1.0, 1.0], dtype=np.float32),
+            low=np.array([-1.5, -1.5, -1.5, 0.0, -1.0, -1.0, 0.0, 0.0], dtype=np.float32),
+            high=np.array([1.5, 1.5, 1.5, 1.5, 1.0, 1.0, 1.0, 1.0], dtype=np.float32),
             dtype=np.float32
         )
         
@@ -453,9 +475,14 @@ class SafetyHVACEnv(gym.Env):
         self.current_step = 0
         self.episode_start_idx = 0
         
-        # Safety counters
-        self.runtime = config.lockout_time  # Minutes since last ON (start unlocked)
-        self.offtime = config.lockout_time  # Minutes since last OFF (start unlocked)
+        # Safety counters - track time since ON/OFF state
+        self.minutes_since_on = config.lockout_time  # Time since compressor turned ON
+        self.minutes_since_off = config.lockout_time  # Time since compressor turned OFF
+        self.current_state = 0  # 0 = OFF, 1 = ON
+        
+        # Legacy counters for compatibility
+        self.runtime = config.lockout_time
+        self.offtime = config.lockout_time
         self.last_action = 0
         
         # Mask event counters
@@ -468,6 +495,7 @@ class SafetyHVACEnv(gym.Env):
         self.episode_costs = []
         self.episode_power = []
         self.on_runtimes = []  # Track duration of each ON period
+        self.prev_action = 0  # For switch penalty
         
         # Current parameters (will be set in reset)
         self.R_i = config.R_i
@@ -475,19 +503,39 @@ class SafetyHVACEnv(gym.Env):
         self.R_o = config.R_o
         self.C_in = config.C_in
         self.C_m = config.C_m
+    
+    def get_action_mask(self) -> np.ndarray:
+        """
+        Returns a boolean mask of shape (2,), for actions [OFF, ON].
+        True = action allowed, False = action forbidden by lockout.
+        """
+        allowed = np.array([True, True], dtype=bool)
+        
+        if self.current_state == 1:  # Currently ON
+            # Check if we can turn OFF
+            if self.minutes_since_on < self.config.lockout_time:
+                allowed[0] = False  # OFF forbidden - must stay ON
+        else:  # Currently OFF
+            # Check if we can turn ON
+            if self.minutes_since_off < self.config.lockout_time:
+                allowed[1] = False  # ON forbidden - must stay OFF
+        
+        return allowed
         
     def reset(self, seed: Optional[int] = None, options: Optional[Dict] = None) -> Tuple[np.ndarray, Dict]:
         """Reset the environment for a new episode."""
         super().reset(seed=seed)
         
-        # Domain randomization (training only)
-        if self.use_domain_randomization:
-            variation = self.config.param_variation
-            self.R_i = self.config.R_i * np.random.uniform(1 - variation, 1 + variation)
-            self.R_w = self.config.R_w * np.random.uniform(1 - variation, 1 + variation)
-            self.R_o = self.config.R_o * np.random.uniform(1 - variation, 1 + variation)
-            self.C_in = self.config.C_in * np.random.uniform(1 - variation, 1 + variation)
-            self.C_m = self.config.C_m * np.random.uniform(1 - variation, 1 + variation)
+        # Curriculum Domain Randomization
+        if self.use_domain_randomization and self.randomization_scale > 0:
+            scale = self.randomization_scale
+            low = 1.0 - scale
+            high = 1.0 + scale
+            self.R_i = self.config.R_i * np.random.uniform(low, high)
+            self.R_w = self.config.R_w * np.random.uniform(low, high)
+            self.R_o = self.config.R_o * np.random.uniform(low, high)
+            self.C_in = self.config.C_in * np.random.uniform(low, high)
+            self.C_m = self.config.C_m * np.random.uniform(low, high)
         else:
             # Use nominal parameters
             self.R_i = self.config.R_i
@@ -506,10 +554,30 @@ class SafetyHVACEnv(gym.Env):
             available_range = self.end_idx - self.start_idx
             ep_len = min(self.episode_length, available_range)
             max_start = max(self.start_idx, self.end_idx - ep_len)
+            
             if max_start <= self.start_idx:
                 self.episode_start_idx = self.start_idx
             else:
-                self.episode_start_idx = np.random.randint(self.start_idx, max_start)
+                # Sample with peak hours coverage: try up to 10 times to get an episode
+                # that contains at least one peak hour (16:00-21:00)
+                for _ in range(10):
+                    candidate_start = np.random.randint(self.start_idx, max_start)
+                    # Check if this episode window contains peak hours
+                    candidate_end = min(candidate_start + ep_len, self.end_idx)
+                    has_peak = False
+                    for idx in range(candidate_start, candidate_end, 60):  # Check every hour
+                        if idx < len(self.data):
+                            hour = self.data.index[idx].hour
+                            if 16 <= hour < 21:
+                                has_peak = True
+                                break
+                    if has_peak:
+                        self.episode_start_idx = candidate_start
+                        break
+                else:
+                    # Fallback to random if no peak found
+                    self.episode_start_idx = np.random.randint(self.start_idx, max_start)
+            
             self.episode_length = min(ep_len, self.end_idx - self.episode_start_idx)
         else:
             self.episode_start_idx = self.start_idx
@@ -526,10 +594,16 @@ class SafetyHVACEnv(gym.Env):
         self.T_in = self.config.setpoint + np.random.uniform(-1, 1)
         self.T_mass = self.T_in - 0.5  # Mass is slightly cooler initially
         
-        # Reset safety counters (unlocked state)
+        # Reset safety counters (start in unlocked OFF state)
+        self.minutes_since_on = self.config.lockout_time  # Can turn ON immediately
+        self.minutes_since_off = self.config.lockout_time  # Can turn OFF immediately
+        self.current_state = 0  # Start OFF
+        
+        # Legacy counters for compatibility
         self.runtime = self.config.lockout_time
         self.offtime = self.config.lockout_time
         self.last_action = 0
+        self.prev_action = 0
         
         # Reset statistics
         self.masked_off_count = 0
@@ -542,76 +616,85 @@ class SafetyHVACEnv(gym.Env):
         self._current_on_duration = 0
         
         observation = self._get_observation()
-        info = {'T_in_true': self.T_in, 'T_out': T_out}
+        info = {'T_in_true': self.T_in, 'T_out': T_out, 'action_mask': self.get_action_mask()}
         
         return observation, info
     
     def step(self, action: int) -> Tuple[np.ndarray, float, bool, bool, Dict]:
-        """Execute one timestep with safety layer enforcement."""
+        """Execute one timestep with safety layer enforcement and normalized reward."""
         
         # Get current data
         data_idx = min(self.episode_start_idx + self.current_step, len(self.data) - 1)
         row = self.data.iloc[data_idx]
         T_out = row['T_out']
-        price = row['Price']
+        price_t = row['Price']
         time_sin = row['time_sin']
         time_cos = row['time_cos']
+        current_hour = self.data.index[data_idx].hour
         
         # =====================================================================
-        # SAFETY LAYER: 15-minute lockout enforcement
+        # SAFETY LAYER: Get action mask and apply lockout
         # =====================================================================
+        action_mask = self.get_action_mask()
         original_action = action
+        invalid_action = not action_mask[action]
         masked = False
         
-        if action == 0 and self.last_action == 1:
-            # Trying to turn OFF while ON
-            if self.runtime < self.config.lockout_time:
-                # Cannot turn OFF yet - force ON
+        # Apply mask - force to valid action
+        if not action_mask[action]:
+            # The requested action is forbidden
+            if action == 0:  # Tried to turn OFF but must stay ON
                 action = 1
                 self.masked_off_count += 1
-                masked = True
-        elif action == 1 and self.last_action == 0:
-            # Trying to turn ON while OFF
-            if self.offtime < self.config.lockout_time:
-                # Cannot turn ON yet - force OFF
+            else:  # Tried to turn ON but must stay OFF
                 action = 0
                 self.masked_on_count += 1
-                masked = True
+            masked = True
         
-        # Update counters
+        # Update safety counters based on new action
+        if action == 1:  # ON
+            if self.current_state == 0:
+                # Just turned ON
+                self.minutes_since_on = 1
+            else:
+                self.minutes_since_on += 1
+            self.minutes_since_off = 0
+            self._current_on_duration += 1
+            self.current_state = 1
+        else:  # OFF
+            if self.current_state == 1:
+                # Just turned OFF - record the ON duration
+                if self._current_on_duration > 0:
+                    self.on_runtimes.append(self._current_on_duration)
+                self._current_on_duration = 0
+                self.minutes_since_off = 1
+            else:
+                self.minutes_since_off += 1
+            self.minutes_since_on = 0
+            self.current_state = 0
+        
+        # Legacy counters for compatibility
         if action == 1:
             self.runtime += 1
             self.offtime = 0
-            self._current_on_duration += 1
         else:
             self.offtime += 1
-            if self.last_action == 1 and self._current_on_duration > 0:
-                # Just turned OFF - record the ON duration
-                self.on_runtimes.append(self._current_on_duration)
-                self._current_on_duration = 0
             self.runtime = 0
-        
         self.last_action = action
         
         # =====================================================================
         # 2R2C THERMAL DYNAMICS (Euler integration)
         # =====================================================================
-        # Heat input from HVAC
         Q_hvac = action * self.config.Q_hvac_max  # W
         
         # Heat flows (W)
-        # Q_im: heat flow from indoor air to mass
         Q_im = (self.T_in - self.T_mass) / self.R_i
-        
-        # Q_mo: heat flow from mass to outdoor (through wall)
         Q_mo = (self.T_mass - T_out) / (self.R_w + self.R_o)
         
         # Temperature updates
-        # Indoor air: gains heat from HVAC, loses to mass
         dT_in = (Q_hvac - Q_im) / self.C_in * self.config.dt
         self.T_in += dT_in
         
-        # Building mass: gains from indoor air, loses to outdoor
         dT_mass = (Q_im - Q_mo) / self.C_m * self.config.dt
         self.T_mass += dT_mass
         
@@ -620,49 +703,50 @@ class SafetyHVACEnv(gym.Env):
         self.T_mass = np.clip(self.T_mass, 10.0, 35.0)
         
         # =====================================================================
-        # REWARD CALCULATION (Multi-objective: comfort, cost, and stability)
+        # NORMALIZED REWARD CALCULATION
+        # Per-step reward following the specification exactly
         # =====================================================================
         dt_hours = 1.0 / 60.0  # 1 minute in hours
-        power_kw = action * (self.config.Q_hvac_max / 1000.0)  # Convert W to kW
         
-        # Cost component
-        cost_t = power_kw * price * dt_hours
+        # Raw components (per specification)
+        power_kw = action * self.config.Q_hvac_kw
+        energy_kwh = power_kw * dt_hours
+        instant_cost = energy_kwh * price_t
         
-        # Comfort-based reward
-        temp_error = abs(self.T_in - self.config.setpoint)
-        discomfort_t = temp_error ** 2  # Keep for statistics
+        # Discomfort: squared deviation from setpoint times dt
+        disc_raw = (self.T_in - self.config.setpoint) ** 2 * dt_hours
         
-        # Determine comfort status
-        in_comfort = self.config.comfort_min <= self.T_in <= self.config.comfort_max
+        # Switch penalty: 1 if action changed, 0 otherwise
+        switch_raw = 1.0 if action != self.prev_action else 0.0
         
-        if in_comfort:
-            # In comfort band: positive reward, better when closer to setpoint
-            comfort_reward = 1.0 - (temp_error / 3.0)
-        else:
-            # Outside comfort band: strong penalty
-            if self.T_in < self.config.comfort_min:
-                violation = self.config.comfort_min - self.T_in
-            else:
-                violation = self.T_in - self.config.comfort_max
-            comfort_reward = -3.0 * (1.0 + violation)
+        # Peak hour penalty
+        is_peak = 1.0 if 16 <= current_hour < 21 else 0.0
+        peak_penalty_raw = is_peak * energy_kwh
         
-        # Cost penalty (always applies, stronger during peak)
-        data_idx = min(self.episode_start_idx + self.current_step, len(self.data) - 1)
-        hour = self.data.index[data_idx].hour
-        is_peak = 16 <= hour < 21
+        # Normalize each term to roughly O(1)
+        cost_norm = instant_cost / self.config.cost_scale
+        disc_norm = disc_raw / self.config.disc_scale
+        switch_norm = switch_raw / self.config.switch_scale
+        peak_norm = peak_penalty_raw / self.config.peak_scale
         
-        if is_peak:
-            cost_penalty = 0.5 * cost_t  # Stronger peak penalty
-        else:
-            cost_penalty = 0.1 * cost_t  # Small off-peak penalty
+        # Invalid action penalty (for learning to avoid forbidden actions)
+        invalid_penalty = 1.0 if invalid_action else 0.0
         
-        # Action switching penalty (discourages unnecessary cycling)
-        switching_penalty = 0.0
-        if len(self.episode_actions) > 0 and action != self.episode_actions[-1]:
-            switching_penalty = 0.1  # Small penalty for each switch
+        # Final reward (negative sum as specified)
+        reward = -(
+            self.config.w_cost * cost_norm +
+            self.config.w_disc * disc_norm +
+            self.config.w_switch * switch_norm +
+            self.config.w_peak * peak_norm +
+            self.config.w_invalid * invalid_penalty
+        )
         
-        # Total reward
-        reward = comfort_reward - cost_penalty - switching_penalty
+        # Store previous action for next step's switch penalty
+        self.prev_action = action
+        
+        # Keep discomfort for statistics
+        discomfort_t = (self.T_in - self.config.setpoint) ** 2
+        cost_t = instant_cost
         
         # Store episode data
         self.episode_actions.append(action)
@@ -690,20 +774,24 @@ class SafetyHVACEnv(gym.Env):
             'action': action,
             'original_action': original_action,
             'masked': masked,
+            'invalid_action': invalid_action,
             'power_kw': power_kw,
             'cost': cost_t,
             'discomfort': discomfort_t,
-            'price': price,
+            'price': price_t,
             'runtime': self.runtime,
             'offtime': self.offtime,
+            'minutes_since_on': self.minutes_since_on,
+            'minutes_since_off': self.minutes_since_off,
             'masked_off_total': self.masked_off_count,
-            'masked_on_total': self.masked_on_count
+            'masked_on_total': self.masked_on_count,
+            'action_mask': self.get_action_mask()
         }
         
         return observation, reward, terminated, truncated, info
     
     def _get_observation(self) -> np.ndarray:
-        """Get normalized observation with noise on T_in."""
+        """Get normalized observation with noise on T_in and action mask."""
         data_idx = min(self.episode_start_idx + self.current_step, len(self.data) - 1)
         row = self.data.iloc[data_idx]
         
@@ -724,13 +812,20 @@ class SafetyHVACEnv(gym.Env):
         # Price: already in a reasonable range, normalize 0-1
         price_norm = row['Price'] / self.config.peak_price
         
+        # Get action mask (True/False -> 1.0/0.0)
+        action_mask = self.get_action_mask()
+        mask_off = 1.0 if action_mask[0] else 0.0
+        mask_on = 1.0 if action_mask[1] else 0.0
+        
         return np.array([
             T_in_norm,
             T_out_norm,
             T_mass_norm,
             price_norm,
             row['time_sin'],
-            row['time_cos']
+            row['time_cos'],
+            mask_off,
+            mask_on
         ], dtype=np.float32)
     
     def get_statistics(self) -> Dict:
@@ -1114,7 +1209,11 @@ def generate_figure3_policy_heatmap(model: PPO, config: Config, output_dir: str)
             T_mass_norm = (T_mass - config.setpoint) / 10.0
             price_norm = price / config.peak_price
             
-            obs = np.array([T_in_norm, T_out_norm, T_mass_norm, price_norm, time_sin, time_cos], dtype=np.float32)
+            # Action mask: assume both actions allowed for policy visualization
+            mask_off = 1.0
+            mask_on = 1.0
+            
+            obs = np.array([T_in_norm, T_out_norm, T_mass_norm, price_norm, time_sin, time_cos, mask_off, mask_on], dtype=np.float32)
             
             # Sample multiple actions to estimate probability
             actions = []
@@ -1346,16 +1445,18 @@ def generate_all_tables(
             'C_in (J/K)', 'C_m (J/K)',
             'Lockout Time (min)', 'Setpoint (°C)', 'Deadband (°C)',
             'Q_HVAC (kW)', 'dt (s)',
-            'PPO Learning Rate', 'PPO Gamma', 'PPO n_steps', 'PPO batch_size',
-            'λ_cost', 'λ_discomfort', 'λ_penalty'
+            'PPO Learning Rate', 'PPO Gamma', 'PPO gae_lambda', 'PPO clip_range',
+            'PPO n_steps', 'PPO batch_size',
+            'w_cost', 'w_disc', 'w_switch', 'w_peak', 'w_invalid'
         ],
         'Value': [
             f'{config.R_i:.4f}', f'{config.R_w:.4f}', f'{config.R_o:.4f}',
             f'{config.C_in:.0f}', f'{config.C_m:.0f}',
             f'{config.lockout_time}', f'{config.setpoint}', f'{config.deadband}',
-            f'{config.Q_hvac_max/1000:.1f}', f'{config.dt:.0f}',
-            f'{config.learning_rate}', f'{config.gamma}', f'{config.n_steps}', f'{config.batch_size}',
-            f'{config.lambda_cost}', f'{config.lambda_discomfort}', f'{config.lambda_penalty}'
+            f'{config.Q_hvac_kw:.1f}', f'{config.dt:.0f}',
+            f'{config.learning_rate}', f'{config.gamma}', f'{config.gae_lambda}', f'{config.clip_range}',
+            f'{config.n_steps}', f'{config.batch_size}',
+            f'{config.w_cost}', f'{config.w_disc}', f'{config.w_switch}', f'{config.w_peak}', f'{config.w_invalid}'
         ]
     })
     filepath = os.path.join(output_dir, 'Table_1_System_Parameters.csv')
@@ -1495,42 +1596,11 @@ def main():
     print(f"  Action space: {train_env.action_space}")
     
     # =========================================================================
-    # PHASE 3: Training
+    # PHASE 3: Curriculum Training (3 phases)
     # =========================================================================
     print("\n" + "="*80)
-    print("PHASE 3: Training PPO Agent")
+    print("PHASE 3: Curriculum Training PPO Agent")
     print("="*80)
-    
-    # Wrap environment for stable-baselines3
-    def make_env():
-        return SafetyHVACEnv(
-            data=data,
-            config=config,
-            is_training=True,
-            use_domain_randomization=True,
-            start_idx=0,
-            end_idx=split_idx
-        )
-    
-    vec_env = DummyVecEnv([make_env])
-    
-    # Create PPO model
-    model = PPO(
-        "MlpPolicy",
-        vec_env,
-        learning_rate=config.learning_rate,
-        gamma=config.gamma,
-        n_steps=config.n_steps,
-        batch_size=config.batch_size,
-        n_epochs=config.n_epochs,
-        ent_coef=config.ent_coef,
-        clip_range=config.clip_range,
-        verbose=1,
-        policy_kwargs=dict(net_arch=[dict(pi=[128, 128], vf=[128, 128])])
-    )
-    
-    print(f"\nTraining for {config.total_timesteps:,} timesteps...")
-    print("This may take several minutes...")
     
     # Training callback to track mask events
     class MaskTrackingCallback(BaseCallback):
@@ -1550,14 +1620,67 @@ def main():
                     self.masked_on_total = env.masked_on_count
             return True
     
-    mask_callback = MaskTrackingCallback()
+    # Curriculum: Phase 1 (nominal), Phase 2 (±10%), Phase 3 (±15%)
+    curriculum_phases = [
+        (0.0, config.total_timesteps // 3, "Phase 1: Nominal parameters"),
+        (0.10, config.total_timesteps // 3, "Phase 2: ±10% randomization"),
+        (0.15, config.total_timesteps // 3, "Phase 3: ±15% randomization"),
+    ]
     
-    # Train
-    model.learn(
-        total_timesteps=config.total_timesteps,
-        callback=mask_callback,
-        progress_bar=True
-    )
+    model = None
+    total_trained_steps = 0
+    
+    for phase_idx, (rand_scale, phase_steps, phase_name) in enumerate(curriculum_phases):
+        print(f"\n{'='*60}")
+        print(f"{phase_name} ({phase_steps:,} timesteps)")
+        print(f"{'='*60}")
+        
+        # Create environment with current randomization scale
+        def make_env(scale=rand_scale):
+            return SafetyHVACEnv(
+                data=data,
+                config=config,
+                is_training=True,
+                use_domain_randomization=(scale > 0),
+                start_idx=0,
+                end_idx=split_idx,
+                randomization_scale=scale
+            )
+        
+        vec_env = DummyVecEnv([make_env])
+        
+        if model is None:
+            # Create new PPO model for first phase
+            model = PPO(
+                "MlpPolicy",
+                vec_env,
+                learning_rate=config.learning_rate,
+                gamma=config.gamma,
+                gae_lambda=config.gae_lambda,
+                n_steps=config.n_steps,
+                batch_size=config.batch_size,
+                n_epochs=config.n_epochs,
+                ent_coef=config.ent_coef,
+                clip_range=config.clip_range,
+                verbose=1,
+                policy_kwargs=dict(net_arch=[dict(pi=[128, 128], vf=[128, 128])])
+            )
+        else:
+            # Continue training with new environment
+            model.set_env(vec_env)
+        
+        mask_callback = MaskTrackingCallback()
+        
+        # Train for this phase
+        model.learn(
+            total_timesteps=phase_steps,
+            callback=mask_callback,
+            progress_bar=True,
+            reset_num_timesteps=False
+        )
+        
+        total_trained_steps += phase_steps
+        print(f"Completed {phase_name}. Total steps: {total_trained_steps:,}")
     
     # Save model
     model_path = os.path.join(output_dir, "ppo_hvac_model")
@@ -1566,7 +1689,7 @@ def main():
     
     # Training mask statistics
     train_mask_stats = {
-        'total_steps': mask_callback.total_steps,
+        'total_steps': total_trained_steps,
         'masked_off': mask_callback.masked_off_total,
         'masked_on': mask_callback.masked_on_total
     }

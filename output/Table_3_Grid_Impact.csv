@@ -1,4 +1,4 @@
 Metric,Baseline,PI-DRL
-Avg Peak Power (kW),1.578,1.951
-Avg Off-Peak Power (kW),1.914,1.974
-Peak Reduction (%),-,-23.7
+Avg Peak Power (kW),1.609,0.598
+Avg Off-Peak Power (kW),1.899,2.250
+Peak Reduction (%),-,62.8
