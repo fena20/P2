@@ -197,7 +197,13 @@ class SafetyHVACEnv(gym.Env):
                  data_df: pd.DataFrame,
                  episode_length_days: int = 7,
                  randomize: bool = False,
-                 param_multipliers: Optional[Dict[str, float]] = None):
+                 param_multipliers: Optional[Dict[str, float]] = None,
+                 randomization_scale: float = 0.15,
+                 w_cost: float = 1.0,
+                 w_disc: float = 1.0,
+                 w_switch: float = 0.2,
+                 w_peak: float = 1.0,
+                 w_invalid: float = 0.5):
         """
         Parameters
         ----------
@@ -209,6 +215,10 @@ class SafetyHVACEnv(gym.Env):
             If True, randomize parameters each episode
         param_multipliers : dict, optional
             Custom parameter multipliers (for robustness testing)
+        randomization_scale : float
+            Scale for domain randomization (0.0, 0.10, 0.15)
+        w_cost, w_disc, w_switch, w_peak, w_invalid : float
+            Configurable reward weights
         """
         super().__init__()
         
@@ -216,11 +226,12 @@ class SafetyHVACEnv(gym.Env):
         self.episode_length_steps = episode_length_days * 24 * 60  # 1-min steps
         self.randomize = randomize
         self.custom_multipliers = param_multipliers
+        self.randomization_scale = randomization_scale
         
-        # State: [T_in_obs, T_out, T_mass, Price, time_sin, time_cos]
+        # State: [T_in_obs, T_out, T_mass, Price, time_sin, time_cos, mask_off, mask_on]
         self.observation_space = spaces.Box(
-            low=np.array([-10, -30, -10, 0, -1, -1], dtype=np.float32),
-            high=np.array([50, 50, 50, 1, 1, 1], dtype=np.float32),
+            low=np.array([-10, -30, -10, 0, -1, -1, 0, 0], dtype=np.float32),
+            high=np.array([50, 50, 50, 1, 1, 1, 1, 1], dtype=np.float32),
             dtype=np.float32
         )
         
@@ -243,10 +254,18 @@ class SafetyHVACEnv(gym.Env):
         # Lockout constraints
         self.lockout_minutes = 15
         
-        # Reward weights
-        self.lambda_cost = 1.0
-        self.lambda_discomfort = 50.0
-        self.lambda_penalty = 10.0
+        # Reward weights (configurable)
+        self.w_cost = w_cost
+        self.w_disc = w_disc
+        self.w_switch = w_switch
+        self.w_peak = w_peak
+        self.w_invalid = w_invalid
+        
+        # Normalization constants
+        self.cost_scale = 0.01
+        self.disc_scale = 1.0  # Reduced from 5.0 to make discomfort more impactful
+        self.switch_scale = 1.0
+        self.peak_scale = 0.01
         
         # Internal state
         self.reset()
@@ -261,9 +280,12 @@ class SafetyHVACEnv(gym.Env):
             # Use custom multipliers for robustness testing
             multipliers = self.custom_multipliers
         elif self.randomize:
-            # Domain randomization: ±15%
+            # Domain randomization with configurable scale
+            scale = self.randomization_scale
+            low = 1.0 - scale
+            high = 1.0 + scale
             multipliers = {
-                key: np.random.uniform(0.85, 1.15)
+                key: np.random.uniform(low, high)
                 for key in self.NOMINAL_PARAMS.keys()
             }
         else:
@@ -282,14 +304,35 @@ class SafetyHVACEnv(gym.Env):
         # Set parameters
         self._set_parameters()
         
-        # Random starting position in data
+        # Random starting position with peak hour coverage
         max_start = len(self.data_df) - self.episode_length_steps
         if max_start <= 0:
             # If data is shorter than episode length, use full data
             self.current_step = 0
             self.episode_length_steps = len(self.data_df)
         else:
-            self.current_step = np.random.randint(0, max_start)
+            # Sample with bias towards episodes containing peak hours
+            attempts = 0
+            max_attempts = 20
+            valid_start = False
+            
+            while attempts < max_attempts:
+                candidate_start = np.random.randint(0, max_start)
+                candidate_end = candidate_start + self.episode_length_steps
+                
+                # Check if episode contains peak hours (16-21)
+                episode_hours = self.data_df.iloc[candidate_start:candidate_end].index.hour
+                has_peak_hours = ((episode_hours >= 16) & (episode_hours < 21)).any()
+                
+                if has_peak_hours or attempts >= max_attempts - 1:
+                    self.current_step = candidate_start
+                    valid_start = True
+                    break
+                
+                attempts += 1
+            
+            if not valid_start:
+                self.current_step = np.random.randint(0, max_start)
         
         self.episode_start = self.current_step
         
@@ -298,10 +341,14 @@ class SafetyHVACEnv(gym.Env):
         self.T_in = 21.0  # Start at comfortable temperature
         self.T_mass = 21.0
         
-        # Safety lockout tracking
-        self.runtime_minutes = 0   # Minutes since last turn ON
-        self.offtime_minutes = 20  # Start with enough offtime
+        # Safety lockout tracking (renamed for clarity)
+        self.minutes_since_on = 0   # Minutes since compressor turned ON
+        self.minutes_since_off = 20  # Minutes since compressor turned OFF (start with enough)
         self.last_action = 0
+        
+        # Backward compatibility
+        self.runtime_minutes = self.minutes_since_on
+        self.offtime_minutes = self.minutes_since_off
         
         # Get initial observation
         obs = self._get_observation()
@@ -309,12 +356,29 @@ class SafetyHVACEnv(gym.Env):
         
         return obs, info
     
+    def get_action_mask(self) -> np.ndarray:
+        """
+        Returns a boolean mask of shape (2,), for actions [OFF, ON].
+        True = action allowed, False = action forbidden by lockout.
+        """
+        allowed = np.array([True, True], dtype=bool)
+        if self.minutes_since_on < self.lockout_minutes and self.minutes_since_on > 0:
+            # Still in minimum ON time, cannot turn OFF
+            allowed[0] = False   # OFF forbidden
+        if self.minutes_since_off < self.lockout_minutes and self.minutes_since_off > 0:
+            # Still in minimum OFF time, cannot turn ON
+            allowed[1] = False   # ON forbidden
+        return allowed
+    
     def _get_observation(self) -> np.ndarray:
-        """Get observation with noise on T_in."""
+        """Get observation with noise on T_in and action mask."""
         row = self.data_df.iloc[self.current_step]
         
         # Add Gaussian noise to T_in
         T_in_obs = self.T_in + np.random.randn() * self.obs_noise_std
+        
+        # Get action mask
+        mask = self.get_action_mask()
         
         obs = np.array([
             T_in_obs,
@@ -322,7 +386,9 @@ class SafetyHVACEnv(gym.Env):
             self.T_mass,
             row['Price'],
             row['time_sin'],
-            row['time_cos']
+            row['time_cos'],
+            float(mask[0]),  # OFF allowed
+            float(mask[1])   # ON allowed
         ], dtype=np.float32)
         
         return obs
@@ -332,39 +398,53 @@ class SafetyHVACEnv(gym.Env):
         row = self.data_df.iloc[self.current_step]
         T_out = row['T_out']
         Price = row['Price']
+        current_hour = row.name.hour if hasattr(row.name, 'hour') else self.data_df.index[self.current_step].hour
         
-        # Apply safety lockout
+        # Get action mask
+        action_mask = self.get_action_mask()
         original_action = action
-        if self.last_action == 1:  # Was ON
-            self.runtime_minutes += 1
-            if self.runtime_minutes < self.lockout_minutes and action == 0:
-                action = 1  # Force to stay ON
-                self.masked_off_count += 1
         
-        if self.last_action == 0:  # Was OFF
-            self.offtime_minutes += 1
-            if self.offtime_minutes < self.lockout_minutes and action == 1:
-                action = 0  # Force to stay OFF
+        # Check if action is invalid (for penalty)
+        invalid_action = not action_mask[action]
+        
+        # Apply safety lockout masking
+        if not action_mask[action]:
+            # Force to allowed action
+            if action_mask[0]:
+                action = 0  # Force OFF
+                self.masked_off_count += 1
+            elif action_mask[1]:
+                action = 1  # Force ON
                 self.masked_on_count += 1
+        
+        # Update lockout counters
+        if self.last_action == 1:  # Was ON
+            self.minutes_since_on += 1
+            self.minutes_since_off = 0
+        else:  # Was OFF
+            self.minutes_since_off += 1
+            self.minutes_since_on = 0
         
         # Reset counters on state change
         if action != self.last_action:
             if action == 1:  # Turning ON
-                self.runtime_minutes = 1
-                self.offtime_minutes = 0
+                self.minutes_since_on = 1
+                self.minutes_since_off = 0
             else:  # Turning OFF
-                self.offtime_minutes = 1
-                self.runtime_minutes = 0
+                self.minutes_since_off = 1
+                self.minutes_since_on = 0
         
+        prev_action = self.last_action
         self.last_action = action
+        
+        # Backward compatibility
+        self.runtime_minutes = self.minutes_since_on
+        self.offtime_minutes = self.minutes_since_off
         
         # Compute HVAC power
         Q_hvac = self.Q_hvac if action == 1 else 0.0
         
         # 2R2C dynamics (Euler integration)
-        # dT_in/dt = (T_mass - T_in)/R_i + (T_out - T_in)/R_o + Q_hvac/C_in
-        # dT_mass/dt = (T_in - T_mass)/R_i + (T_out - T_mass)/R_w
-        
         R_i = self.params['R_i']
         R_w = self.params['R_w']
         R_o = self.params['R_o']
@@ -381,20 +461,36 @@ class SafetyHVACEnv(gym.Env):
         self.T_in += dT_in
         self.T_mass += dT_mass
         
-        # Compute reward
+        # Compute normalized reward components
+        # 1. Energy cost
         power_kw = Q_hvac
-        cost_t = power_kw * Price * self.dt_hours
-        discomfort_t = (self.T_in - self.T_setpoint) ** 2
+        energy_kwh = power_kw * self.dt_hours
+        instant_cost = energy_kwh * Price
+        cost_norm = instant_cost / self.cost_scale
         
-        # Penalty for being outside comfort band
-        penalty = 0.0
-        if self.T_in < self.T_comfort_min or self.T_in > self.T_comfort_max:
-            penalty = 1.0
+        # 2. Discomfort (use true indoor temp, not noisy observation)
+        disc_raw = (self.T_in - self.T_setpoint) ** 2 * self.dt_hours
+        disc_norm = disc_raw / self.disc_scale
         
+        # 3. Switching penalty
+        switch_raw = 1.0 if action != prev_action else 0.0
+        switch_norm = switch_raw / self.switch_scale
+        
+        # 4. Peak hour penalty
+        is_peak = 1.0 if 16 <= current_hour < 21 else 0.0
+        peak_penalty_raw = is_peak * energy_kwh
+        peak_norm = peak_penalty_raw / self.peak_scale
+        
+        # 5. Invalid action penalty
+        invalid_penalty = 1.0 if invalid_action else 0.0
+        
+        # Combined reward
         reward = -(
-            self.lambda_cost * cost_t +
-            self.lambda_discomfort * discomfort_t +
-            self.lambda_penalty * penalty
+            self.w_cost * cost_norm +
+            self.w_disc * disc_norm +
+            self.w_switch * switch_norm +
+            self.w_peak * peak_norm +
+            self.w_invalid * invalid_penalty
         )
         
         # Move to next timestep
@@ -408,7 +504,12 @@ class SafetyHVACEnv(gym.Env):
         if not done:
             obs = self._get_observation()
         else:
-            obs = np.zeros(6, dtype=np.float32)
+            obs = np.zeros(8, dtype=np.float32)
+        
+        # Compute backward-compatible metrics for logging
+        cost_t = instant_cost
+        discomfort_t = (self.T_in - self.T_setpoint) ** 2
+        penalty = 1.0 if self.T_in < self.T_comfort_min or self.T_in > self.T_comfort_max else 0.0
         
         info = {
             'T_in': self.T_in,
@@ -492,39 +593,69 @@ class BaselineThermostat:
 
 def train_pi_drl(train_df: pd.DataFrame, 
                  total_timesteps: int = 100_000) -> PPO:
-    """Train PPO agent with domain randomization."""
+    """Train PPO agent with curriculum learning and domain randomization."""
     print("=" * 80)
-    print("STEP 4: TRAINING PI-DRL CONTROLLER")
+    print("STEP 4: TRAINING PI-DRL CONTROLLER WITH CURRICULUM")
     print("=" * 80)
     print(f"Total timesteps: {total_timesteps:,}")
-    print(f"Training episodes: 7-day windows with domain randomization")
+    print(f"Curriculum: Phase 1 (nominal) → Phase 2 (±10%) → Phase 3 (±15%)")
     print()
     
-    # Create training environment with randomization
-    def make_env():
-        return SafetyHVACEnv(train_df, episode_length_days=7, randomize=True)
+    # Curriculum phases
+    phases = [
+        {'name': 'Phase 1 (Nominal)', 'scale': 0.0, 'timesteps': total_timesteps // 3},
+        {'name': 'Phase 2 (±10%)', 'scale': 0.10, 'timesteps': total_timesteps // 3},
+        {'name': 'Phase 3 (±15%)', 'scale': 0.15, 'timesteps': total_timesteps - 2 * (total_timesteps // 3)},
+    ]
     
-    env = DummyVecEnv([make_env])
+    model = None
     
-    # Initialize PPO
-    model = PPO(
-        'MlpPolicy',
-        env,
-        learning_rate=3e-4,
-        n_steps=2048,
-        batch_size=64,
-        n_epochs=10,
-        gamma=0.99,
-        gae_lambda=0.95,
-        clip_range=0.2,
-        ent_coef=0.01,
-        verbose=1,
-        device='cpu'
-    )
+    for phase_idx, phase in enumerate(phases):
+        print(f"\n{'='*60}")
+        print(f"  {phase['name']}: randomization_scale={phase['scale']}")
+        print(f"  Training for {phase['timesteps']:,} timesteps")
+        print(f"{'='*60}")
+        
+        # Create training environment with current randomization scale
+        def make_env():
+            return SafetyHVACEnv(
+                train_df, 
+                episode_length_days=7, 
+                randomize=True,
+                randomization_scale=phase['scale'],
+                w_cost=1.0,
+                w_disc=5.0,  # Increase discomfort weight
+                w_switch=0.1,  # Reduce switching penalty
+                w_peak=0.5,  # Reduce peak penalty
+                w_invalid=0.2  # Reduce invalid penalty
+            )
+        
+        env = DummyVecEnv([make_env])
+        
+        if model is None:
+            # Initialize PPO for first phase
+            model = PPO(
+                'MlpPolicy',
+                env,
+                learning_rate=2e-4,  # Reduced from 3e-4
+                n_steps=2048,
+                batch_size=64,
+                n_epochs=10,
+                gamma=0.99,
+                gae_lambda=0.95,
+                clip_range=0.15,  # Reduced from 0.2
+                ent_coef=0.05,  # Increased from 0.01 to encourage exploration
+                verbose=1,
+                device='cpu'
+            )
+        else:
+            # Continue training with new environment
+            model.set_env(env)
+        
+        # Train for this phase
+        model.learn(total_timesteps=phase['timesteps'], reset_num_timesteps=False)
     
-    print("Training in progress...")
-    model.learn(total_timesteps=total_timesteps)
-    print("✓ Training complete.\n")
+    print("\n✓ Curriculum training complete.\n")
     
     return model
 
@@ -537,7 +668,7 @@ def evaluate_controller(controller,
     print(f"Evaluating {controller_name}...")
     
     # Create test environment (no randomization, nominal parameters)
-    env = SafetyHVACEnv(test_df, episode_length_days=9999, randomize=False)
+    env = SafetyHVACEnv(test_df, episode_length_days=9999, randomize=False, randomization_scale=0.0)
     env.episode_length_steps = len(test_df)  # Use full test set
     
     obs, _ = env.reset()
@@ -657,7 +788,8 @@ def robustness_test(controller,
             test_df, 
             episode_length_days=9999, 
             randomize=False,
-            param_multipliers=multipliers
+            param_multipliers=multipliers,
+            randomization_scale=0.0
         )
         env.episode_length_steps = len(test_df)
         
@@ -810,10 +942,10 @@ def create_all_figures(baseline_df: pd.DataFrame,
     
     for i, T_out in enumerate(temps_out):
         for j, hour in enumerate(hours):
-            # Create synthetic observation
+            # Create synthetic observation (8-dim with action masks)
             time_sin = np.sin(2 * np.pi * hour / 24)
             time_cos = np.cos(2 * np.pi * hour / 24)
-            obs = np.array([21.0, T_out, 21.0, 0.1, time_sin, time_cos], dtype=np.float32)
+            obs = np.array([21.0, T_out, 21.0, 0.1, time_sin, time_cos, 1.0, 1.0], dtype=np.float32)
             
             # Query policy multiple times for stochasticity
             actions = []
@@ -1197,8 +1329,8 @@ def main():
     )
     
     # Step 6: Generate Figures
-    train_env = SafetyHVACEnv(train_df, episode_length_days=7, randomize=True)
-    test_env = SafetyHVACEnv(test_df, episode_length_days=9999, randomize=False)
+    train_env = SafetyHVACEnv(train_df, episode_length_days=7, randomize=True, randomization_scale=0.15)
+    test_env = SafetyHVACEnv(test_df, episode_length_days=9999, randomize=False, randomization_scale=0.0)
     
     create_all_figures(
         baseline_df, pidrl_df, baseline_summary, pidrl_summary,
