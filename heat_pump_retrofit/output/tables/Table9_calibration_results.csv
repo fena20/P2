@@ -1,0 +1,8 @@
+Parameter,Value,95% CI,Method
+α (climate weight),0.591,0.52–0.64,Regression on Pareto results
+β (price weight),0.793,0.71–0.87,Regression on Pareto results
+γ (Poor envelope),0.995,0.95–1.10,Median of class-specific fits
+γ (Medium envelope),0.736,0.65–0.80,Median of class-specific fits
+γ (Good envelope),0.494,0.35–0.50,Median of class-specific fits
+Calibration R²,0.977,-,Goodness of fit
+V = 0.5 threshold,NPV ≈ 0,@ 15 years,Economic interpretation

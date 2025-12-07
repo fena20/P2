@@ -1,0 +1,9 @@
+Category,Limitation,Impact,Mitigation,Future Work
+Temporal Resolution,No hourly analysis,May underestimate HP performance degradation in extreme cold; does not capture peak load timing,COP curves from field studies used for cold climate HP sizing,Integration with EnergyPlus for hourly simulation
+Spatial Aggregation,HDD at Census division level,Local climate variability (±500 HDD) not captured; urban/rural differences masked,Results presented with climate band sensitivity analysis,County-level climate data integration
+Retrofit Effectiveness,Uniform % reduction assumed,Air sealing in leaky homes more effective than in tight homes,Literature-based ranges provided (±30%),Building simulation-based retrofit curves
+HP Performance,Annual average COP used,Cold climate COP degradation at T < -5°C not dynamic,Used COP@17°F for cold climate sizing,Temperature-dependent COP curves from NEEP data
+Emissions Accounting,Direct emissions only,Upstream gas leakage (2-3%) not included; grid average vs marginal emissions,Sensitivity analysis with 2050 grid scenarios,Full lifecycle assessment (LCA) integration
+Uncertainty Analysis,No Monte Carlo propagation,Parameter correlations not modeled; confidence intervals limited,One-way sensitivity analysis for key parameters,Full probabilistic analysis with correlated inputs
+Behavioral Factors,Fixed thermostat setpoints,Rebound effects and HP learning curves not modeled,Model residuals analyzed for behavioral patterns,Integration with behavioral survey data
+Economic Parameters,Static fuel prices,Price volatility and trends not captured,Wide sensitivity range tested (±50%),Stochastic price modeling
