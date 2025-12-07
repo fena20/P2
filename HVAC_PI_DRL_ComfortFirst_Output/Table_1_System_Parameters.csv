@@ -1,0 +1,17 @@
+Parameter,Value
+R_i (K/W),0.0005
+R_w (K/W),0.0030
+R_o (K/W),0.0020
+C_in (J/K),1000000
+C_m (J/K),4000000
+Lockout Time (min),15
+Setpoint (°C),21.0
+Comfort Band (°C),"[19.5, 24.0]"
+Q_HVAC (kW),3.0
+dt (s),60
+comfort_bonus,1.0
+comfort_violation_base,10.0
+comfort_violation_exp,2.0
+cost_weight,0.5
+peak_weight,0.3
+switch_penalty,0.15
