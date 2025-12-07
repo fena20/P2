@@ -1,0 +1,320 @@
+{
+  "cold_winter": {
+    "baseline": {
+      "total_cost": {
+        "mean": 55.11000000000613,
+        "std": 0.10862780491203548
+      },
+      "total_energy_kwh": {
+        "mean": 405.0400000000001,
+        "std": 0.3773592452822758
+      },
+      "comfort_ratio": {
+        "mean": 0.7113194444444445,
+        "std": 0.00022442962302853371
+      },
+      "n_cycles": {
+        "mean": 27.2,
+        "std": 0.39999999999999997
+      },
+      "mean_temp": {
+        "mean": 20.29528217869409,
+        "std": 0.005796391948394224
+      },
+      "avg_on_duration": {
+        "mean": 289.31428571428575,
+        "std": 0.26954231805877293
+      },
+      "short_cycles": {
+        "mean": 0.2,
+        "std": 0.4
+      }
+    },
+    "ppo": {
+      "total_cost": {
+        "mean": 61.20000000000808,
+        "std": 0.0
+      },
+      "total_energy_kwh": {
+        "mean": 432.0,
+        "std": 0.0
+      },
+      "comfort_ratio": {
+        "mean": 0.5519444444444445,
+        "std": 0.0014592516215254049
+      },
+      "n_cycles": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "mean_temp": {
+        "mean": 21.638595029110466,
+        "std": 0.007475650711395546
+      },
+      "avg_on_duration": {
+        "mean": 8640.0,
+        "std": 0.0
+      },
+      "short_cycles": {
+        "mean": 0.0,
+        "std": 0.0
+      }
+    },
+    "comparison": {
+      "total_cost": {
+        "t_statistic": -112.12598846001721,
+        "p_value": 3.7939871361808955e-08,
+        "significant": "True",
+        "improvement_pct": -11.05062602068821
+      },
+      "total_energy_kwh": {
+        "t_statistic": -142.8877142248529,
+        "p_value": 1.4388976369243438e-08,
+        "significant": "True",
+        "improvement_pct": -6.656132727631818
+      },
+      "comfort_ratio": {
+        "t_statistic": 204.81639738353147,
+        "p_value": 3.40897129214987e-09,
+        "significant": "True",
+        "improvement_pct": 22.40554525041492
+      },
+      "n_cycles": {
+        "t_statistic": 136.0,
+        "p_value": 1.753230821046938e-08,
+        "significant": "True",
+        "improvement_pct": 100.0
+      },
+      "mean_temp": {
+        "t_statistic": -222.8563014589279,
+        "p_value": 2.432166382864523e-09,
+        "significant": "True",
+        "improvement_pct": -6.618842933982852
+      },
+      "avg_on_duration": {
+        "t_statistic": -61961.96407623756,
+        "p_value": 4.070526132013686e-19,
+        "significant": "True",
+        "improvement_pct": -2886.371716373691
+      },
+      "short_cycles": {
+        "t_statistic": 1.0,
+        "p_value": 0.373900966300059,
+        "significant": "False",
+        "improvement_pct": 100.0
+      }
+    }
+  },
+  "mild_winter": {
+    "baseline": {
+      "total_cost": {
+        "mean": 37.54100000000111,
+        "std": 0.17083325203256103
+      },
+      "total_energy_kwh": {
+        "mean": 296.87,
+        "std": 0.20396078054371541
+      },
+      "comfort_ratio": {
+        "mean": 0.9927546296296297,
+        "std": 0.0009755234956345157
+      },
+      "n_cycles": {
+        "mean": 103.4,
+        "std": 0.8
+      },
+      "mean_temp": {
+        "mean": 21.28081046343293,
+        "std": 0.007813982987981444
+      },
+      "avg_on_duration": {
+        "mean": 57.0964920315076,
+        "std": 0.5807260824223082
+      },
+      "short_cycles": {
+        "mean": 38.0,
+        "std": 2.9664793948382653
+      }
+    },
+    "ppo": {
+      "total_cost": {
+        "mean": 36.51000000000057,
+        "std": 0.06618156843112322
+      },
+      "total_energy_kwh": {
+        "mean": 308.86,
+        "std": 0.37735924528227494
+      },
+      "comfort_ratio": {
+        "mean": 0.8953472222222221,
+        "std": 0.0016921913780089813
+      },
+      "n_cycles": {
+        "mean": 119.2,
+        "std": 0.4
+      },
+      "mean_temp": {
+        "mean": 21.90976023416578,
+        "std": 0.01455193599203435
+      },
+      "avg_on_duration": {
+        "mean": 51.391763085399454,
+        "std": 0.22686739713396184
+      },
+      "short_cycles": {
+        "mean": 77.6,
+        "std": 1.2
+      }
+    },
+    "comparison": {
+      "total_cost": {
+        "t_statistic": 12.37284138182303,
+        "p_value": 0.0002452412723539526,
+        "significant": "True",
+        "improvement_pct": 2.746330678459573
+      },
+      "total_energy_kwh": {
+        "t_statistic": -50.286794026600965,
+        "p_value": 9.358179615839376e-07,
+        "significant": "True",
+        "improvement_pct": -4.038804864081924
+      },
+      "comfort_ratio": {
+        "t_statistic": 110.83282621109454,
+        "p_value": 3.9741289785583295e-08,
+        "significant": "True",
+        "improvement_pct": 9.811831091006619
+      },
+      "n_cycles": {
+        "t_statistic": -32.25161494664518,
+        "p_value": 5.510195518608507e-06,
+        "significant": "True",
+        "improvement_pct": -15.280464216634426
+      },
+      "mean_temp": {
+        "t_statistic": -70.58278033083334,
+        "p_value": 2.414211238922345e-07,
+        "significant": "True",
+        "improvement_pct": -2.9554784664502516
+      },
+      "avg_on_duration": {
+        "t_statistic": 17.348777433800954,
+        "p_value": 6.479133329453926e-05,
+        "significant": "True",
+        "improvement_pct": 9.991382558073974
+      },
+      "short_cycles": {
+        "t_statistic": -38.46292014934767,
+        "p_value": 2.729151774215437e-06,
+        "significant": "True",
+        "improvement_pct": -104.21052631578947
+      }
+    }
+  },
+  "spring": {
+    "baseline": {
+      "total_cost": {
+        "mean": 17.307000000000766,
+        "std": 0.05221110992881725
+      },
+      "total_energy_kwh": {
+        "mean": 163.09,
+        "std": 0.40914545090957644
+      },
+      "comfort_ratio": {
+        "mean": 0.9950231481481481,
+        "std": 0.0006628620862627944
+      },
+      "n_cycles": {
+        "mean": 99.2,
+        "std": 0.4
+      },
+      "mean_temp": {
+        "mean": 20.830678404732243,
+        "std": 0.01690517043175621
+      },
+      "avg_on_duration": {
+        "mean": 32.881373737373735,
+        "std": 0.10338527876698847
+      },
+      "short_cycles": {
+        "mean": 51.8,
+        "std": 1.16619037896906
+      }
+    },
+    "ppo": {
+      "total_cost": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "total_energy_kwh": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "comfort_ratio": {
+        "mean": 0.005787037037037037,
+        "std": 0.0006866850451014504
+      },
+      "n_cycles": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "mean_temp": {
+        "mean": 13.047098482866593,
+        "std": 0.00556944670894431
+      },
+      "avg_on_duration": {
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "short_cycles": {
+        "mean": 0.0,
+        "std": 0.0
+      }
+    },
+    "comparison": {
+      "total_cost": {
+        "t_statistic": 662.9623474236233,
+        "p_value": 3.1059124430333145e-11,
+        "significant": "True",
+        "improvement_pct": 100.0
+      },
+      "total_energy_kwh": {
+        "t_statistic": 797.2225996277488,
+        "p_value": 1.4853482492674133e-11,
+        "significant": "True",
+        "improvement_pct": 100.0
+      },
+      "comfort_ratio": {
+        "t_statistic": 2361.4462026349875,
+        "p_value": 1.929472115833834e-13,
+        "significant": "True",
+        "improvement_pct": 99.41840176805862
+      },
+      "n_cycles": {
+        "t_statistic": 496.0,
+        "p_value": 9.913175064280308e-11,
+        "significant": "True",
+        "improvement_pct": 100.0
+      },
+      "mean_temp": {
+        "t_statistic": 804.8467774666118,
+        "p_value": 1.4298614015796535e-11,
+        "significant": "True",
+        "improvement_pct": 37.36594541297994
+      },
+      "avg_on_duration": {
+        "t_statistic": 636.0939222591321,
+        "p_value": 3.664874529307226e-11,
+        "significant": "True",
+        "improvement_pct": 100.0
+      },
+      "short_cycles": {
+        "t_statistic": 88.83626710381958,
+        "p_value": 9.62549924643364e-08,
+        "significant": "True",
+        "improvement_pct": 100.0
+      }
+    }
+  }
+}

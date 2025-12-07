@@ -1,0 +1,9 @@
+Metric,Baseline (mean±std),PI-DRL (mean±std)
+cost,6.23±0.04,6.05±0.04
+energy_kwh,51.71±0.20,56.90±0.35
+comfort_ratio,1.00±0.00,0.88±0.00
+cycles,7.80±0.40,4.60±0.49
+mean_temp,21.10±0.07,21.99±0.01
+on_ratio,0.72±0.00,0.79±0.00
+avg_runtime,120.67±7.32,204.95±19.88
+short_cycles,4.80±0.75,3.60±0.49
