@@ -1,7 +1,11 @@
 Variable,Description,Units,Source,Role
-HDD65,Heating Degree Days,°F-days,RECS,Feature
+HDD65,Heating Degree Days (base 65°F),°F-days,RECS,Feature
 A_heated,Heated floor area,sqft,RECS,Feature
+E_heat,Annual heating energy,BTU,RECS,Intermediate
 thermal_intensity,E_heat / (A × HDD),BTU/sqft/HDD,Derived,Target
 building_age,2024 - year built,years,Derived,Feature
+TYPEHUQ,Housing unit type,Category,RECS,Feature
+DRAFTY,Draftiness level,1-4 scale,RECS,Feature
+ADQINSUL,Insulation adequacy,1-4 scale,RECS,Feature
 envelope_class,Poor/Medium/Good,Category,Derived,Stratification
 NWEIGHT,Sample weight,Households,RECS,Weighting

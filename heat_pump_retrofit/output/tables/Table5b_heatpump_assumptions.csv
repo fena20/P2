@@ -1,5 +1,5 @@
-HP Type,COP,Cost ($),Source
-Gas Only,-,-,Baseline
-Standard HP,2.5,5000,AHRI
-Cold Climate HP,3.0,7000,NEEP
-High-Perf HP,3.5,9000,Premium
+HP Type,COP (47°F),HSPF,Installed Cost ($),Source
+Gas Only (Baseline),-,-,-,Current system
+Standard HP,2.5,8.5,5000,AHRI/NEEP
+Cold Climate HP,3.0,10.0,7000,NEEP ccHP List
+High-Performance HP,3.5,11.5,9000,Manufacturer data

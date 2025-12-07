@@ -1,7 +1,7 @@
-Measure,Reduction (%),Cost ($),Source
-None,0,0,-
-Air Sealing,10,300,LBNL
-Attic Insulation,15,1500,NREL
-Wall Insulation,12,3500,NREL
-Windows,8,8000,ENERGY STAR
-Comprehensive,30,12000,Combined
+Measure,Intensity Reduction (%),Cost ($),Lifetime (years),Source
+None,0,0,-,-
+Air Sealing,10,300,20,LBNL Home Energy Saver
+Attic Insulation,15,1500,30,NREL ResStock
+Wall Insulation,12,3500,30,NREL ResStock
+Window Replacement,8,8000,25,ENERGY STAR
+Comprehensive,30,12000,30,Combined sources

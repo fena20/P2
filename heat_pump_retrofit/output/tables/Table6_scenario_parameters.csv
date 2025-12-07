@@ -1,5 +1,8 @@
 Parameter,Value,Notes
 Retrofit options,6,None + 5 measures
-HP options,4,Gas + 3 HP types
-Total combinations,24,Enumeration
-Discount rate,5%,Annualization
+HP options,4,Gas Only + 3 HP types
+Total combinations,24,6 × 4 enumeration
+Method,Complete enumeration,All options evaluated
+Pareto filtering,Non-dominated sort,By cost and CO₂
+Discount rate,5%,For annualization
+Analysis horizon,20 years,Lifetime matching

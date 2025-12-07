@@ -1,1 +1,31 @@
-
+Division,Envelope,N (millions),Mean HDD,Mean Sqft,Mean I (×10³)
+Mountain South,Poor,0.15,2849,1063,10.21
+Mountain South,Medium,1.26,2707,1638,8.15
+Mountain South,Good,0.80,2568,2147,7.22
+South Atlantic,Poor,0.49,3050,1610,9.52
+South Atlantic,Medium,3.60,3091,1861,7.59
+South Atlantic,Good,2.24,3044,2509,6.24
+Middle Atlantic,Poor,1.26,4946,1220,8.10
+Middle Atlantic,Medium,6.47,4917,1658,7.11
+Middle Atlantic,Good,1.56,4981,2192,5.97
+West South Central,Poor,0.43,2106,1405,10.57
+West South Central,Medium,3.19,1976,1837,9.87
+West South Central,Good,1.67,1947,2334,8.02
+Pacific,Poor,0.86,2317,1408,10.96
+Pacific,Medium,5.51,2389,1682,9.48
+Pacific,Good,2.31,2900,2114,7.47
+East North Central,Poor,1.61,5739,1503,7.65
+East North Central,Medium,7.97,5853,1860,6.17
+East North Central,Good,3.32,5868,2405,4.74
+West North Central,Poor,0.61,5932,1421,7.08
+West North Central,Medium,3.25,6000,1942,5.38
+West North Central,Good,1.45,6173,2251,4.33
+New England,Poor,0.34,5535,1242,7.43
+New England,Medium,1.57,5566,1464,6.89
+New England,Good,0.48,5663,1983,4.68
+Mountain North,Poor,0.25,5855,1371,6.57
+Mountain North,Medium,1.73,5881,1925,5.19
+Mountain North,Good,1.40,5812,2440,4.22
+East South Central,Poor,0.27,3142,1532,9.60
+East South Central,Medium,1.40,3133,1837,7.49
+East South Central,Good,0.71,3205,2273,5.92
