@@ -1,0 +1,20 @@
+Variable,Symbol,Unit,Description,Source
+DOEID,ID,-,Unique household identifier,RECS microdata
+NWEIGHT,w,-,Sample weight for national estimates,RECS microdata
+HDD65,HDD₆₅,°F-days,Heating degree days (base 65°F),RECS microdata
+CDD65,CDD₆₅,°F-days,Cooling degree days (base 65°F),RECS microdata
+TOTSQFT_EN,A,sqft,Total conditioned floor area,RECS microdata
+TOTHSQFT,A_heat,sqft,Heated floor area,RECS microdata
+YEARMADERANGE,-,category,Year built range (9 categories),RECS microdata
+TYPEHUQ,-,category,Housing type (5 categories),RECS microdata
+DRAFTY,-,ordinal,Draftiness level (1-3),RECS microdata
+ADQINSUL,-,ordinal,Insulation adequacy (1-4),RECS microdata
+TYPEGLASS,-,category,Window glass type (1-3),RECS microdata
+FUELHEAT,-,category,Main heating fuel,RECS microdata
+EQUIPM,-,category,Heating equipment type,RECS microdata
+BTUNG,E_gas,BTU,Annual natural gas consumption,RECS microdata
+REGIONC,-,category,Census region (1-4),RECS microdata
+DIVISION,-,category,Census division (1-10),RECS microdata
+Thermal_Intensity_I,I,BTU/sqft/HDD,Heating thermal intensity (derived),Calculated
+envelope_class,-,category,Envelope efficiency class (poor/medium/good),Calculated
+climate_zone,-,category,Climate zone (mild/mixed/cold),Calculated

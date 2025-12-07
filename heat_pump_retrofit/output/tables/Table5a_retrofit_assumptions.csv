@@ -1,0 +1,7 @@
+Measure,Description,Intensity Reduction (%),Cost ($/sqft),Lifetime (years)
+No Retrofit,Baseline,0,0.0,-
+Air Sealing,Seal air leaks,10,0.5,20
+Attic Insulation,Upgrade to R-49,15,1.5,30
+Wall Insulation,Blown-in cavity,12,2.5,30
+Windows,Double-pane low-E,8,3.0,25
+Comprehensive,Air seal + Attic + Windows,30,5.0,25

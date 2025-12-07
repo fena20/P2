@@ -1,0 +1,11 @@
+Parameter,Value,Unit
+Population Size,100,-
+Number of Generations,100,-
+Crossover Probability,0.9,-
+Mutation Probability,0.1,-
+Tournament Size,2,-
+Objective 1,Minimize Annual Cost,$/year
+Objective 2,Minimize CO₂ Emissions,kg/year
+Decision Variable 1,Retrofit Measure,6 options
+Decision Variable 2,Heat Pump Type,4 options
+Discount Rate,5,%

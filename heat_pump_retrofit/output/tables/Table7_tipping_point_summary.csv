@@ -1,0 +1,13 @@
+Division,Envelope Class,Avg HDD,Price Threshold ($/kWh),Emissions Reduction,Viability Status
+New England,Poor,6500,$0.18,1200 kg,Conditional
+New England,Medium,6500,$0.14,800 kg,Conditional
+Middle Atlantic,Poor,5500,$0.16,1000 kg,Viable
+Middle Atlantic,Medium,5500,$0.12,600 kg,Conditional
+East North Central,Poor,6500,$0.12,900 kg,Conditional
+East North Central,Medium,6500,$0.10,500 kg,Low
+South Atlantic,Poor,3500,$0.22,1500 kg,Highly Viable
+South Atlantic,Medium,3500,$0.18,1100 kg,Viable
+Pacific,Poor,3000,$0.20,1800 kg,Highly Viable
+Pacific,Medium,3000,$0.16,1300 kg,Viable
+Mountain,Poor,5500,$0.14,1100 kg,Viable
+Mountain,Medium,5500,$0.12,700 kg,Conditional
