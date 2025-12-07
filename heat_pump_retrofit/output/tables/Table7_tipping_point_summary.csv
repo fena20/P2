@@ -1,13 +1,13 @@
-Division,Envelope Class,Avg HDD,Price Threshold ($/kWh),Emissions Reduction,Viability Status
-New England,Poor,6500,$0.18,1200 kg,Conditional
-New England,Medium,6500,$0.14,800 kg,Conditional
-Middle Atlantic,Poor,5500,$0.16,1000 kg,Viable
-Middle Atlantic,Medium,5500,$0.12,600 kg,Conditional
-East North Central,Poor,6500,$0.12,900 kg,Conditional
-East North Central,Medium,6500,$0.10,500 kg,Low
-South Atlantic,Poor,3500,$0.22,1500 kg,Highly Viable
-South Atlantic,Medium,3500,$0.18,1100 kg,Viable
-Pacific,Poor,3000,$0.20,1800 kg,Highly Viable
-Pacific,Medium,3000,$0.16,1300 kg,Viable
-Mountain,Poor,5500,$0.14,1100 kg,Viable
-Mountain,Medium,5500,$0.12,700 kg,Conditional
+Division,Envelope,Avg HDD,Price Threshold,Emissions Reduction,Viability Status
+New England,Poor,6500,$0.18 ± $0.02,1200 ± 150 kg,Conditional
+New England,Medium,6500,$0.14 ± $0.02,800 ± 100 kg,Conditional
+Middle Atlantic,Poor,5500,$0.16 ± $0.02,1000 ± 120 kg,Viable
+Middle Atlantic,Medium,5500,$0.12 ± $0.01,600 ± 80 kg,Conditional
+East North Central,Poor,6500,$0.12 ± $0.02,900 ± 110 kg,Conditional
+East North Central,Medium,6500,$0.10 ± $0.01,500 ± 70 kg,Low
+South Atlantic,Poor,3500,$0.22 ± $0.03,1500 ± 180 kg,Highly Viable
+South Atlantic,Medium,3500,$0.18 ± $0.03,1100 ± 130 kg,Viable
+Pacific,Poor,3000,$0.20 ± $0.03,1800 ± 200 kg,Highly Viable
+Pacific,Medium,3000,$0.16 ± $0.02,1300 ± 150 kg,Viable
+Mountain,Poor,5500,$0.14 ± $0.02,1100 ± 130 kg,Viable
+Mountain,Medium,5500,$0.12 ± $0.01,700 ± 90 kg,Conditional

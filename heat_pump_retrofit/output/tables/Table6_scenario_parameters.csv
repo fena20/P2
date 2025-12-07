@@ -1,0 +1,11 @@
+Parameter,Value,Description
+Retrofit Options,6,"None, Air Seal, Attic, Wall, Windows, Comprehensive"
+HP Options,4,"Gas Only, Standard HP, Cold Climate HP, High-Perf HP"
+Total Combinations,24,6 × 4 evaluated by complete enumeration
+Pareto Filtering,Yes,Non-dominated solutions identified
+Objective 1,Min Annual Cost,$/year (CapEx + OpEx)
+Objective 2,Min CO₂ Emissions,kg/year
+Discount Rate,5%,For annualized capital costs
+Analysis Period,15-30 years,Based on equipment lifetime
+Climate Scenarios,3,"Cold (HDD>6000), Mixed, Mild (HDD<3000)"
+Price Scenarios,5,Regional electricity and gas prices

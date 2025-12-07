@@ -1,0 +1,2 @@
+
+Note: I = Thermal Intensity in BTU/(sqft·HDD). Values shown as ×10³ for readability.

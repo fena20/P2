@@ -1,13 +1,14 @@
 \begin{table}
-\caption{XGBoost thermal intensity model performance metrics.}
+\caption{XGBoost model performance for thermal intensity prediction. OLS baseline included for comparison. Thermal intensity units: BTU/(sqft·HDD). Note: Sample weights (NWEIGHT) were not used in model training to avoid biasing toward population characteristics rather than physical relationships.}
 \label{tab:model_performance}
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrlll}
 \toprule
 Dataset & N & RMSE & MAE & R² \\
 \midrule
-Train & 7509 & 0.0027 & 0.0020 & 0.5747 \\
-Validation & 939 & 0.0028 & 0.0020 & 0.5410 \\
-Test & 1878 & 0.0028 & 0.0020 & 0.5410 \\
+Train & 5631 & 0.00262 & 0.00188 & 0.614 \\
+Validation & 1878 & 0.00293 & 0.00205 & 0.507 \\
+Test & 1878 & 0.00304 & 0.00212 & 0.460 \\
+Test (OLS Baseline) & 1878 & 0.00330 & 0.00223 & 0.362 \\
 \bottomrule
 \end{tabular}
 \end{table}

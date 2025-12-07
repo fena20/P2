@@ -1,0 +1,10 @@
+
+Note on Uncertainty Ranges:
+- Price threshold uncertainty (±$0.015-0.03/kWh) reflects sensitivity to:
+  (1) ±10% variation in retrofit effectiveness assumptions
+  (2) ±15% variation in HP COP estimates
+  (3) ±5% variation in natural gas prices
+  
+- Emissions reduction ranges reflect:
+  (1) Grid emission factor scenarios (current vs. 2030 projection)
+  (2) Heating load estimation uncertainty from XGBoost model (R² ≈ 0.50)
