@@ -29,6 +29,13 @@ This repository contains a **comprehensive Edge AI framework for building energy
 - **[src/edge_ai_deployment.py](src/edge_ai_deployment.py)** - TorchScript optimization
 - **[src/visualization.py](src/visualization.py)** - Publication figures
 - **[src/main_training.py](src/main_training.py)** - Complete training pipeline
+- **[src/01_data_prep.py](src/01_data_prep.py)** – RECS 2020 heat pump workflow (Step 1 of 7)
+- **[src/02_descriptive_validation.py](src/02_descriptive_validation.py)** – Weighted descriptive statistics & validation
+- **[src/03_xgboost_model.py](src/03_xgboost_model.py)** – Thermal intensity XGBoost model
+- **[src/04_shap_analysis.py](src/04_shap_analysis.py)** – SHAP interpretation utilities
+- **[src/05_retrofit_scenarios.py](src/05_retrofit_scenarios.py)** – Retrofit & heat pump scenario assumptions
+- **[src/06_nsga2_optimization.py](src/06_nsga2_optimization.py)** – NSGA-II multi-objective optimization
+- **[src/07_tipping_point_maps.py](src/07_tipping_point_maps.py)** – Tipping point heatmaps & maps
 
 ### 🚀 Getting Started
 
@@ -42,6 +49,36 @@ python3 test_components.py
 # 3. Run full training (4-6 hours)
 cd src && python3 main_training.py
 ```
+
+---
+
+## 🧊 Heat Pump Retrofit Workflow (RECS 2020)
+
+This repository now includes a complete research pipeline for the project
+**“Techno-Economic Feasibility and Optimization of Heat Pump Retrofits in Aging U.S. Housing Stock (RECS 2020)”**.
+
+### 📂 Data Setup
+- Clone [`DataR`](https://github.com/Fateme9977/DataR) alongside this repo or make sure all RECS 2020 files live under `./data/`.
+- Optionally point to a custom data directory:
+
+```bash
+export RECS2020_DATA_DIR=/path/to/DataR/data
+```
+
+### 🧪 Seven-Step Workflow
+| Step | Script | Output Highlights |
+|------|--------|-------------------|
+| 1 | `python src/01_data_prep.py` | Cleaned gas-heated dataset (`output/recs2020/data/recs2020_gas_heating.parquet`), Table 1 |
+| 2 | `python src/02_descriptive_validation.py` | Tables 2 & 8, Figures 2–4 |
+| 3 | `python src/03_xgboost_model.py` | Table 3, Figure 5, serialized XGBoost model |
+| 4 | `python src/04_shap_analysis.py` | Table 4, Figures 6–7 |
+| 5 | `python src/05_retrofit_scenarios.py` | Table 5, retrofit scenario library |
+| 6 | `python src/06_nsga2_optimization.py` | Table 6, Figure 8, Pareto archive |
+| 7 | `python src/07_tipping_point_maps.py` | Table 7, Figures 9–10 |
+
+All intermediate data, tables, and figures are written under `output/recs2020/`.
+
+> ✅ **Tip:** Steps 6–7 rely on the scenario outputs from earlier steps. Run the scripts sequentially for a reproducible workflow.
 
 ---
 
