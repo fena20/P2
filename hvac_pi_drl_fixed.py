@@ -101,19 +101,21 @@ class Config:
     episode_length_days: int = 1
     train_split:        float = 0.8
 
-    # Reward weights – COMFORT DOMINANT (fixed)
-    # Comfort must be prioritized MUCH more than cost
-    w_cost:   float = 0.01      # Reduced from 0.08
-    w_disc:   float = 100.0     # Increased from 15 - CRITICAL for comfort
-    w_switch: float = 0.5       # Reduced from 1
-    w_peak:   float = 0.05      # Reduced from 0.15
-    w_invalid: float = 10.0     # Increased from 7
+    # Reward weights – BALANCED (comfort priority but not at expense of efficiency)
+    # Key insight: Comfort is critical, but always-ON is NOT the solution
+    w_cost:   float = 1.0       # Cost matters - prevents always-ON
+    w_disc:   float = 50.0      # Comfort is important but not extreme
+    w_switch: float = 0.1       # Small penalty for switching (encourages efficiency)
+    w_peak:   float = 2.0       # Peak hours penalty (encourages load shifting)
+    w_invalid: float = 5.0      # Invalid action penalty
+    w_efficiency: float = 0.5  # NEW: Penalty for unnecessary ON when comfortable
 
-    # Normalization scales - Adjusted for better balance
+    # Normalization scales - Balanced
     cost_scale:   float = 0.01
-    disc_scale:   float = 0.01   # Increased from 0.001 to reduce amplification
+    disc_scale:   float = 0.1   # Reasonable normalization
     switch_scale: float = 1.0
     peak_scale:   float = 0.01
+    efficiency_scale: float = 1.0
 
     # PPO hyperparameters
     learning_rate: float = 1e-4
@@ -270,19 +272,26 @@ def load_ampds2_local(config: Config) -> pd.DataFrame:
 
 
 # =========================================================================
-# ADAPTIVE REWARD HANDLER (BAND + SETPOINT) - FIXED VERSION
+# ADAPTIVE REWARD HANDLER - PROPERLY BALANCED VERSION
 # =========================================================================
 
 class AdaptiveRewardHandler:
     """
-    Reward function with STRONG preference for comfort over energy saving.
-    FIXED: Comfort penalties are now MUCH stronger and more immediate.
+    Reward function that balances comfort, cost, and efficiency.
+    
+    Key principles:
+    1. Comfort violations are costly, but not so costly that agent always stays ON
+    2. Cost matters - prevents wasteful always-ON behavior
+    3. Efficiency bonus: reward for turning OFF when comfortable
+    4. Peak hours: stronger penalty to encourage load shifting
+    5. Smooth transitions: small penalty for switching (prevents excessive cycling)
     """
 
     def __init__(self, config: Config):
         self.config = config
         self.T_min = config.comfort_min
         self.T_max = config.comfort_max
+        self.T_setpoint = config.setpoint
         # Hard safety comfort band (slightly wider)
         self.hard_min = self.T_min - 1.0
         self.hard_max = self.T_max + 1.0
@@ -302,106 +311,142 @@ class AdaptiveRewardHandler:
         energy_kwh = current_step_power_kw * dt_hours
         instant_cost = energy_kwh * price_t
 
-        # ========== COMFORT TERMS (STRONGER) ==========
+        # ========== COMFORT ASSESSMENT ==========
         in_soft_band = (self.T_min <= T_in <= self.T_max)
         in_hard_band = (self.hard_min <= T_in <= self.hard_max)
-
-        # Deviation from comfort band (CRITICAL)
+        
+        # Distance from comfort band boundaries
         if T_in < self.T_min:
-            dev_band = self.T_min - T_in
+            dev_band = self.T_min - T_in  # Too cold
+            dev_direction = -1
         elif T_in > self.T_max:
-            dev_band = T_in - self.T_max
+            dev_band = T_in - self.T_max  # Too hot
+            dev_direction = 1
         else:
             dev_band = 0.0
+            dev_direction = 0
 
-        # Deviation from setpoint (secondary)
-        dev_set = abs(T_in - self.config.setpoint)
+        # Distance from setpoint
+        dev_setpoint = abs(T_in - self.T_setpoint)
 
-        # CRITICAL: Use exponential penalty for comfort violations
-        # This makes violations MUCH more costly
+        # ========== COMFORT PENALTY (BALANCED) ==========
+        # Quadratic penalty for comfort violations (not exponential - prevents extreme behavior)
         if dev_band > 0:
-            # Exponential penalty: small violations are costly, large ones are VERY costly
-            disc_band = (dev_band ** 2) * (1.0 + 5.0 * dev_band)
+            # Quadratic penalty: grows with violation but not extreme
+            disc_band = dev_band ** 2
         else:
             disc_band = 0.0
 
-        # Setpoint tracking (quadratic, less aggressive)
-        disc_set = dev_set ** 2
+        # Setpoint tracking (smaller weight - comfort band is more important)
+        disc_setpoint = (dev_setpoint ** 2) * 0.5
 
-        # Hard band penalty (EXTREME penalty if outside hard band)
+        # Hard band penalty (safety critical - but not extreme)
         hard_penalty = 0.0
         if not in_hard_band:
             if T_in < self.hard_min:
                 d_h = self.hard_min - T_in
             else:
                 d_h = T_in - self.hard_max
-            # Extreme penalty: 100x for hard violations
-            hard_penalty = (d_h ** 2) * 200.0
+            # Strong but not extreme penalty
+            hard_penalty = (d_h ** 2) * 10.0
 
-        # Normalize comfort penalty (using updated disc_scale)
+        # Normalized comfort penalty
         disc_term = (
-            disc_set +           # Setpoint tracking
-            10.0 * disc_band +   # Band violation (10x weight)
-            hard_penalty          # Hard violation
+            disc_setpoint +      # Setpoint tracking (smaller)
+            disc_band +          # Band violation (primary)
+            hard_penalty         # Hard violation (safety)
         ) / max(self.config.disc_scale, 1e-6)
 
-        # STRONG bonus for staying inside comfort band
-        bonus = 20.0 if in_soft_band else 0.0
-
-        # ========== COST TERMS (REDUCED) ==========
-        # Only apply cost penalty if we're in comfort band
-        # If outside comfort, cost is irrelevant
+        # ========== COMFORT BONUS (MODERATE) ==========
+        # Bonus for being in comfort band (encourages staying there)
         if in_soft_band:
-            cost_term = instant_cost / self.config.cost_scale
+            # Bonus decreases as we move away from setpoint
+            setpoint_bonus = 1.0 - (dev_setpoint / ((self.T_max - self.T_min) / 2.0)) ** 2
+            setpoint_bonus = max(0.0, setpoint_bonus)
+            comfort_bonus = 5.0 * setpoint_bonus  # Max 5.0 when at setpoint
         else:
-            # Outside comfort: cost penalty is minimal
-            cost_term = 0.01 * (instant_cost / self.config.cost_scale)
+            comfort_bonus = 0.0
 
-        # ========== PEAK TERMS (REDUCED) ==========
-        peak_term = 0.0
-        if is_peak:
+        # ========== COST PENALTY (ALWAYS APPLIES) ==========
+        # Cost always matters - this prevents always-ON behavior
+        cost_term = instant_cost / self.config.cost_scale
+
+        # ========== EFFICIENCY BONUS (NEW - CRITICAL) ==========
+        # Reward for turning OFF when temperature is comfortable or above setpoint
+        # This prevents always-ON behavior
+        efficiency_bonus = 0.0
+        if action == 0:  # OFF action
             if in_soft_band:
-                # Only penalize peak if we're comfortable
-                peak_term = (energy_kwh / self.config.peak_scale)
-            else:
-                # Outside comfort: peak penalty is minimal
-                peak_term = 0.01 * (energy_kwh / self.config.peak_scale)
+                # Good: OFF and comfortable
+                if T_in >= self.T_setpoint:
+                    # Even better: OFF when at or above setpoint (can coast)
+                    efficiency_bonus = 2.0
+                else:
+                    # Still good: OFF and in band (but below setpoint)
+                    efficiency_bonus = 0.5
+            elif T_in > self.T_max:
+                # Good: OFF when too hot (natural cooling)
+                efficiency_bonus = 1.0
+        
+        # Penalty for being ON when unnecessary
+        if action == 1:  # ON action
+            if T_in > self.T_max:
+                # Bad: ON when too hot (wasteful)
+                efficiency_bonus = -1.0
+            elif in_soft_band and T_in > self.T_setpoint + 0.5:
+                # Bad: ON when comfortably above setpoint (wasteful)
+                efficiency_bonus = -0.5
 
-        # ========== SWITCHING TERM (REDUCED) ==========
+        efficiency_term = efficiency_bonus / self.config.efficiency_scale
+
+        # ========== PEAK HOURS PENALTY ==========
+        # Stronger penalty during peak hours (encourages load shifting)
+        peak_term = 0.0
+        if is_peak and action == 1:  # ON during peak hours
+            peak_term = (energy_kwh / self.config.peak_scale)
+            # Extra penalty if we're already comfortable
+            if in_soft_band:
+                peak_term *= 2.0  # Double penalty for peak usage when comfortable
+
+        # ========== SWITCHING PENALTY (SMALL) ==========
+        # Small penalty for switching (prevents excessive cycling)
         switch_term = (1.0 if action != prev_action else 0.0) / self.config.switch_scale
 
-        # ========== INVALID ACTION (STRONG PENALTY) ==========
-        invalid_term = 10.0 if is_invalid else 0.0
+        # ========== INVALID ACTION PENALTY ==========
+        invalid_term = 1.0 if is_invalid else 0.0
 
         # ========== FINAL REWARD CALCULATION ==========
         total_penalty = (
-            self.config.w_cost    * cost_term +
-            self.config.w_disc    * disc_term +
-            self.config.w_switch  * switch_term +
-            self.config.w_peak    * peak_term +
-            self.config.w_invalid * invalid_term
+            self.config.w_cost       * cost_term +
+            self.config.w_disc       * disc_term +
+            self.config.w_switch     * switch_term +
+            self.config.w_peak       * peak_term +
+            self.config.w_invalid    * invalid_term -
+            self.config.w_efficiency * efficiency_term  # Note: negative because it's a bonus
         )
 
+        total_bonus = comfort_bonus
+
         # Reward = bonus - penalty
-        # Removed the 0.005 scaling - let the weights do their job
-        raw_reward = bonus - total_penalty
+        raw_reward = total_bonus - total_penalty
         
-        # Clip to reasonable range but keep it meaningful
-        reward = np.clip(raw_reward, -100.0, 100.0)
+        # Scale reward to reasonable range for PPO
+        reward = np.clip(raw_reward * 0.1, -10.0, 10.0)
 
         components = {
-            "cost_term":     cost_term,
-            "disc_term":     disc_term,
-            "disc_set":      disc_set,
-            "disc_band":     disc_band,
-            "switch_term":   switch_term,
-            "peak_term":     peak_term,
-            "invalid_term":  invalid_term,
-            "bonus":         bonus,
-            "raw_cost":      instant_cost,
-            "raw_discomfort": disc_band,
-            "raw_reward":    raw_reward,
-            "scaled_reward": reward,
+            "cost_term":       cost_term,
+            "disc_term":       disc_term,
+            "disc_setpoint":   disc_setpoint,
+            "disc_band":       disc_band,
+            "switch_term":     switch_term,
+            "peak_term":       peak_term,
+            "invalid_term":    invalid_term,
+            "efficiency_term": efficiency_term,
+            "comfort_bonus":   comfort_bonus,
+            "raw_cost":        instant_cost,
+            "raw_discomfort":  disc_band,
+            "raw_reward":      raw_reward,
+            "scaled_reward":   reward,
         }
 
         return reward, components
@@ -662,8 +707,9 @@ class SafetyHVACEnv(gym.Env):
             "cost": r_comp["raw_cost"],
             "discomfort": r_comp["raw_discomfort"],
             "price": price_t,
-            "reward_bonus": r_comp["bonus"],
+            "reward_bonus": r_comp.get("comfort_bonus", 0.0),
             "reward_cost_term": r_comp["cost_term"],
+            "reward_efficiency": r_comp.get("efficiency_term", 0.0),
             "action_mask": self.get_action_mask(),
         }
 
@@ -1289,7 +1335,7 @@ def generate_all_tables(
             'Q_HVAC (kW)', 'dt (s)',
             'PPO Learning Rate', 'PPO Gamma', 'PPO gae_lambda', 'PPO clip_range',
             'PPO n_steps', 'PPO batch_size',
-            'w_cost', 'w_disc', 'w_switch', 'w_peak', 'w_invalid'
+            'w_cost', 'w_disc', 'w_switch', 'w_peak', 'w_invalid', 'w_efficiency'
         ],
         'Value': [
             f'{config.R_i:.4f}', f'{config.R_w:.4f}', f'{config.R_o:.4f}',
@@ -1300,7 +1346,7 @@ def generate_all_tables(
             f'{config.clip_range}',
             f'{config.n_steps}', f'{config.batch_size}',
             f'{config.w_cost}', f'{config.w_disc}', f'{config.w_switch}',
-            f'{config.w_peak}', f'{config.w_invalid}'
+            f'{config.w_peak}', f'{config.w_invalid}', f'{config.w_efficiency}'
         ]
     })
     filepath = os.path.join(output_dir, 'Table_1_System_Parameters.csv')
