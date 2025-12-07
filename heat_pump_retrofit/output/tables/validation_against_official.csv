@@ -1,0 +1,28 @@
+Metric,Microdata,Official,Notes
+Total gas-heated units (millions),60.74,HC6.1,Compare with natural gas heating row
+Mean heated sqft,1865.0,HC10.1,Compare with overall mean
+Mean HDD65,4278.0,-,For reference
+Housing type: Single-family detached (%),71.3,HC2.1,Compare with housing type rows
+Housing type: Apartment (5+ units) (%),11.9,HC2.1,Compare with housing type rows
+Housing type: Single-family attached (%),7.3,HC2.1,Compare with housing type rows
+Housing type: Mobile home (%),2.5,HC2.1,Compare with housing type rows
+Housing type: Apartment (2-4 units) (%),7.0,HC2.1,Compare with housing type rows
+Year built: Before 1950 (%),20.5,HC2.1,Compare with year built rows
+Year built: 1950-1959 (%),12.6,HC2.1,Compare with year built rows
+Year built: 1960-1969 (%),11.9,HC2.1,Compare with year built rows
+Year built: 1970-1979 (%),12.8,HC2.1,Compare with year built rows
+Year built: 1980-1989 (%),10.4,HC2.1,Compare with year built rows
+Year built: 1990-1999 (%),13.0,HC2.1,Compare with year built rows
+Year built: 2000-2009 (%),11.9,HC2.1,Compare with year built rows
+Year built: 2010-2015 (%),3.7,HC2.1,Compare with year built rows
+Year built: 2016-2020 (%),3.0,HC2.1,Compare with year built rows
+Division: Mountain South (%),3.8,HC6.1,Compare with division columns
+Division: South Atlantic (%),10.9,HC6.1,Compare with division columns
+Division: Middle Atlantic (%),15.9,HC6.1,Compare with division columns
+Division: West South Central (%),9.4,HC6.1,Compare with division columns
+Division: Pacific (%),15.6,HC6.1,Compare with division columns
+Division: East North Central (%),21.7,HC6.1,Compare with division columns
+Division: West North Central (%),9.0,HC6.1,Compare with division columns
+Division: New England (%),4.0,HC6.1,Compare with division columns
+Division: Mountain North (%),5.7,HC6.1,Compare with division columns
+Division: East South Central (%),4.0,HC6.1,Compare with division columns
