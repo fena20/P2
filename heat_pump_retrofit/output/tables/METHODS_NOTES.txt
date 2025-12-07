@@ -1,0 +1,100 @@
+
+================================================================================
+NOTES FOR METHODS SECTION - Heat Pump Retrofit Paper
+================================================================================
+
+2.X Data Filtering
+------------------
+From the full RECS 2020 sample (n=18,496), we selected gas-heated homes based on:
+- FUELHEAT = 1 (natural gas as primary heating fuel)
+- Valid heated floor area (TOTHSQFT > 0)
+- Valid heating degree days (HDD65 > 0)
+- Non-zero gas consumption (BTUNG > 0)
+
+This resulted in n=9,387 households representing approximately 60.7 million 
+weighted U.S. homes with gas heating.
+
+2.X XGBoost Model Specification
+-------------------------------
+The XGBoost model was trained to predict thermal intensity I = E_heat/(A × HDD).
+
+Features used (after removing redundant variables):
+- Numeric: HDD65, A_heated, building_age
+- Categorical: TYPEHUQ, DRAFTY, ADQINSUL, TYPEGLASS, EQUIPM, REGIONC
+
+Variables EXCLUDED to avoid redundancy:
+- log_sqft (highly correlated with A_heated)
+- YEARMADERANGE (redundant with building_age)
+- envelope_class (composite of DRAFTY, ADQINSUL, TYPEGLASS)
+
+IMPORTANT NOTE on sample weights:
+Sample weights (NWEIGHT) were NOT used in model training. Using survey weights 
+in ML training is methodologically debatable and can bias the model toward 
+population characteristics rather than physical relationships. The weights 
+are used only for computing national estimates in descriptive statistics.
+
+2.X Model Interpretation
+------------------------
+The XGBoost model achieves R² ≈ 0.46 on the test set, meaning approximately 
+half of the variance in thermal intensity remains unexplained. This is expected 
+given:
+- Behavioral factors (thermostat settings, occupancy patterns) not in RECS
+- Measurement uncertainty in self-reported energy consumption
+- Heterogeneity in building characteristics within survey categories
+
+The model should be interpreted as a META-MODEL for archetype-level scenario 
+analysis, not for precise prediction of individual households.
+
+The over-prediction observed for high-intensity homes (I > 0.012) suggests 
+the model has difficulty capturing extreme cases, likely due to:
+- Small sample size in the tail of the distribution
+- Unobserved factors driving high consumption in these homes
+
+2.X SHAP Interpretation Caveats
+-------------------------------
+SHAP values measure feature contributions to predictions but do NOT imply 
+CAUSAL EFFECTS. The strong effects of HDD65 and A_heated on predictions 
+reflect their role in the intensity formula (I ∝ 1/(A×HDD)) as well as 
+true physical relationships.
+
+Variables like DRAFTY show smaller SHAP magnitudes but directionally 
+consistent effects: draftier homes have higher predicted intensity, 
+supporting the envelope quality → energy use relationship.
+
+2.X HP Viability Score Definition
+---------------------------------
+The HP Viability Score (V) is a HEURISTIC INDEX designed to summarize the 
+multi-dimensional results of the cost-emission analysis into a single metric:
+
+    V = (1 - α·HDD*) × (1 - β·P*) × γ
+
+Where:
+- HDD* = (HDD - 2000)/6000  (normalized HDD, 0-1)
+- P* = (price - 0.08)/0.14  (normalized electricity price, 0-1)
+- α = 0.6 (climate sensitivity weight)
+- β = 0.8 (price sensitivity weight)
+- γ = envelope factor (Poor: 1.05, Medium: 0.75, Good: 0.45)
+
+The parameters α, β, γ were calibrated to reproduce the qualitative patterns 
+from the detailed Pareto analysis (Figure 8) and sensitivity analysis (Figure 11).
+
+V > 0.5: HP retrofit likely viable (cost and emissions benefits)
+V ≈ 0.5: Conditional viability (depends on specific circumstances)
+V < 0.5: HP retrofit less attractive under current conditions
+
+This is NOT a probabilistic model but rather a policy-relevant summary metric.
+
+2.X Uncertainty Analysis
+------------------------
+Uncertainty ranges in Table 7 reflect sensitivity to:
+
+1. Retrofit effectiveness: ±10% variation in assumed intensity reductions
+2. Heat pump COP: ±15% variation from rated values
+3. Natural gas prices: ±5% variation from regional averages
+4. Grid emission factors: Current (2023) vs. projected 2030 values
+
+The XGBoost model uncertainty (R² ≈ 0.50) propagates to heating load 
+estimates but is partially averaged out when analyzing archetypes rather 
+than individual homes.
+
+================================================================================
