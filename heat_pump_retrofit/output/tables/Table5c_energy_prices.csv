@@ -1,6 +1,6 @@
-Region,Elec ($/kWh),Gas ($/therm),Grid CO₂ (kg/kWh),Source
-National Average,0.15,1.2,0.42,EIA 2023
-Northeast,0.22,1.5,0.3,EIA SEDS
-Midwest,0.14,0.95,0.6,EIA SEDS
-South,0.12,1.1,0.45,EIA SEDS
-West,0.18,1.3,0.35,EIA SEDS
+Parameter,Value,Units,Source
+Electricity,0.12,$/kWh,EIA 2023 average
+Natural Gas,1.2,$/therm,EIA 2023 average
+Grid CO₂ (current),0.42,kg/kWh,EPA eGRID 2022
+Grid CO₂ (2030),0.3,kg/kWh,NREL projection
+Gas CO₂,5.3,kg/therm,EPA

@@ -1,19 +1,24 @@
 \begin{table}
-\caption{Global feature importance ranking based on mean absolute SHAP values.}
+\caption{Global feature importance based on mean absolute SHAP values.}
 \label{tab:shap_importance}
-\begin{tabular}{rlrr}
+\begin{tabular}{lrrr}
 \toprule
-Rank & Feature & Mean |SHAP| & Importance (%) \\
+Feature & Mean |SHAP| & Rank & Normalized (%) \\
 \midrule
-1 & HDD65 & 0.0015 & 33.1181 \\
-2 & A_heated & 0.0014 & 31.1887 \\
-3 & TYPEHUQ & 0.0006 & 12.8883 \\
-4 & building_age & 0.0004 & 9.6673 \\
-5 & REGIONC & 0.0002 & 3.8780 \\
-6 & EQUIPM & 0.0002 & 3.4271 \\
-7 & TYPEGLASS & 0.0001 & 2.7569 \\
-8 & DRAFTY & 0.0001 & 1.9139 \\
-9 & ADQINSUL & 0.0001 & 1.1617 \\
+HDD65 & 0.001122 & 1 & 25.144472 \\
+A_heated & 0.001070 & 2 & 23.979950 \\
+TYPEHUQ_enc & 0.000549 & 3 & 12.318735 \\
+building_age & 0.000418 & 4 & 9.364592 \\
+REGIONC_enc & 0.000291 & 5 & 6.516931 \\
+log_hdd & 0.000277 & 6 & 6.199797 \\
+log_sqft & 0.000215 & 7 & 4.829227 \\
+sqft_per_hdd & 0.000127 & 8 & 2.841942 \\
+building_age_sq & 0.000099 & 9 & 2.213925 \\
+DRAFTY_enc & 0.000088 & 10 & 1.973179 \\
+envelope_score & 0.000081 & 11 & 1.810639 \\
+ADQINSUL_enc & 0.000061 & 12 & 1.363981 \\
+size_cat_enc & 0.000044 & 13 & 0.984817 \\
+hdd_bin_enc & 0.000020 & 14 & 0.457813 \\
 \bottomrule
 \end{tabular}
 \end{table}
