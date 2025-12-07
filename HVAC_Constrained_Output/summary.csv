@@ -1,0 +1,4 @@
+Scenario,Cost Change (%),Cost p-value,Comfort Baseline (%),Comfort PI-DRL (%),Comfort p-value,Cycles Baseline,Cycles PI-DRL,Cycles p-value
+Mild Winter,-60.3,1.0000,99.8,60.7,< 0.001,7,0,1.0000
+Cold Winter,47.4,1.0000,45.2,6.8,< 0.001,2,3,1.0000
+Spring,-19.9,< 0.001,99.8,43.6,< 0.001,8,4,1.0000

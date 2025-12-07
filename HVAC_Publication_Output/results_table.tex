@@ -1,0 +1,19 @@
+
+\begin{table}[htbp]
+\centering
+\caption{Comparative performance of baseline thermostat and PI-DRL controller across different scenarios.
+Values shown as mean ± standard deviation (n=10 trials). p-values from paired t-tests.}
+\label{tab:results}
+\begin{tabular}{lcccc}
+\toprule
+Scenario & \multicolumn{2}{c}{Cost (\$)} & \multicolumn{2}{c}{Comfort (\%)} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+& Baseline & PI-DRL & Baseline & PI-DRL \\
+\midrule
+Mild Winter & 5.07 ± 0.09 & 5.02 ± 0.12 & 98.9 ± 0.1 & 99.5 ± 0.0 \\
+Cold Winter & 7.43 ± 0.13 & 7.48 ± 0.07 & 92.8 ± 0.2 & 99.9 ± 0.0 \\
+Spring & 2.47 ± 0.09 & 2.40 ± 0.08 & 97.9 ± 0.2 & 98.8 ± 0.1 \\
+
+\bottomrule
+\end{tabular}
+\end{table}

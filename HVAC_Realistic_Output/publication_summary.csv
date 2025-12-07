@@ -1,0 +1,4 @@
+Scenario,Baseline_Cost_Mean,Baseline_Cost_Std,DRL_Cost_Mean,DRL_Cost_Std,Cost_Change_Pct,Cost_p_value,Baseline_Comfort_Pct,DRL_Comfort_Pct,Comfort_p_value,Baseline_Cycles,DRL_Cycles,Cycles_p_value
+Mild Winter,5.07,0.09,5.02,0.12,1.1,0.3641,98.9,99.5,< 0.001,31,31,1.0000
+Cold Winter,7.43,0.13,7.44,0.13,-0.2,0.7982,92.8,100.0,1.0000,42,40,< 0.001
+Spring,2.47,0.09,2.40,0.08,2.7,0.1108,97.9,98.8,< 0.001,17,17,1.0000
