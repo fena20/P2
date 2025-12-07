@@ -82,18 +82,19 @@ class Config:
     randomization_scale: float = 0.0
 
     # Training
-    total_timesteps:    int = 200_000  # افزایش timesteps
-    episode_length_days: int = 2       # episodes بلندتر برای یادگیری بهتر
+    total_timesteps:    int = 250_000  # افزایش برای یادگیری بهتر
+    episode_length_days: int = 3       # episodes بلندتر
     train_split:        float = 0.8
 
-    # ========== BALANCED REWARD WEIGHTS ==========
-    # استراتژی: Comfort مهم اما متعادل
-    w_comfort_violation: float = 50.0   # جریمه شدید برای خروج از comfort band
-    w_temp_deviation: float = 2.0       # جریمه متوسط برای دوری از setpoint در deadband
-    w_cost: float = 1.0                 # هزینه مهم است
-    w_unnecessary_on: float = 5.0       # جریمه برای ON بودن وقتی نیازی نیست
-    w_peak: float = 2.0                 # Peak shaving مهم است
-    w_switch: float = 0.1               # Cycling کم اهمیت است
+    # ========== COMFORT-DOMINANT WEIGHTS (AGGRESSIVE) ==========
+    # استراتژی: Comfort is KING! Cost secondary.
+    # بعد از نتایج: 10% time in comfort ❌ → باید >90% باشد!
+    w_comfort_violation: float = 500.0   # 🔥 10x افزایش! خروج از comfort = فاجعه
+    w_temp_deviation: float = 50.0       # 🔥 25x افزایش! حتی نزدیک شدن به مرز هم بد است
+    w_cost: float = 0.01                 # 🔽 100x کاهش! cost تقریباً بی‌اهمیت
+    w_unnecessary_on: float = 1.0        # 🔽 5x کاهش! اجازه بده بیشتر ON باشد
+    w_peak: float = 0.05                 # 🔽 40x کاهش! peak هم بی‌اهمیت
+    w_switch: float = 2.0                # 🔼 20x افزایش! جلوی cycling 1400+ را بگیر
     w_invalid: float = 20.0
 
     # PPO hyperparameters - تنظیمات محافظه‌کارانه
