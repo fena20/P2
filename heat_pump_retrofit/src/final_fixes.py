@@ -121,19 +121,17 @@ def fix_figure4_correlation(df):
         ax2.set_xlim(lims)
         ax2.set_ylim(lims)
         
-        # CORRECT correlation calculation
-        r = np.corrcoef(off_vals, mic_vals)[0, 1]
-        
-        # Also calculate MAD from 45° line
+        # Calculate MAD from 45° line (better metric than r for validation)
         mad = np.mean(np.abs(mic_vals - off_vals))
+        mad_pct = 100 * mad / np.mean(off_vals)
         
-        ax2.annotate(f'r = {r:.3f}\nMAD = {mad:.0f} sqft', 
+        # Only show MAD - r is misleading with small range and few points
+        ax2.annotate(f'MAD = {mad:.0f} sqft\n({mad_pct:.1f}% of mean)', 
                     xy=(0.05, 0.95), xycoords='axes fraction',
                     fontsize=11, va='top', 
                     bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
         
-        logger.info(f"Correlation r = {r:.3f} (should be positive now)")
-        logger.info(f"Mean Absolute Deviation from 45° = {mad:.0f} sqft")
+        logger.info(f"Mean Absolute Deviation from 45° = {mad:.0f} sqft ({mad_pct:.1f}%)")
         
         ax2.set_xlabel('Official RECS HC10.1 (sqft)', fontsize=12)
         ax2.set_ylabel('This Study - Microdata (sqft)', fontsize=12)
@@ -299,8 +297,9 @@ def fix_figure8_baseline_marker():
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
     
     plt.suptitle('Figure 8: Pareto Fronts from Complete Enumeration (6 Retrofit × 4 HP = 24 Combinations)\n'
-                 'Red star = Baseline (no intervention); Green diamonds = Pareto-optimal solutions', 
-                 fontsize=12, fontweight='bold', y=1.02)
+                 'Red star = Baseline (no intervention); Green diamonds = Pareto-optimal solutions\n'
+                 'Note: Some gas+retrofit options remain on Pareto front, but HP options achieve lower emissions', 
+                 fontsize=11, fontweight='bold', y=1.04)
     plt.tight_layout()
     plt.savefig(FIGURES_DIR / "Fig8_Pareto_fronts_enumeration.png", dpi=300, bbox_inches='tight')
     plt.savefig(FIGURES_DIR / "Fig8_Pareto_fronts_enumeration.pdf", bbox_inches='tight')
