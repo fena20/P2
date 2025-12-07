@@ -1,0 +1,11 @@
+Parameter,Value,Units,Source,Year,Notes
+Electricity Price (national avg),0.12,$/kWh,EIA SEDS,2022,Residential sector average
+Natural Gas Price (national avg),1.20,$/therm,EIA SEDS,2022,Residential sector average
+Electricity Price Range,0.08-0.22,$/kWh,EIA State Data,2022,10th-90th percentile by state
+Natural Gas Price Range,0.80-1.60,$/therm,EIA State Data,2022,10th-90th percentile by state
+Grid CO₂ Intensity (current),0.42,kg/kWh,EPA eGRID,2022,National average
+Grid CO₂ Intensity (2030 proj),0.30,kg/kWh,NREL Cambium,2023,Mid-case scenario
+Grid CO₂ Intensity (2035 deep),0.15,kg/kWh,NREL Cambium,2023,High RE scenario
+Natural Gas CO₂ Factor,5.3,kg/therm,EPA GHG Inventory,2023,Combustion only
+Discount Rate,5.0,%,DOE FEMP,2023,Real discount rate
+Analysis Horizon,20,years,Industry standard,-,Typical HP lifetime

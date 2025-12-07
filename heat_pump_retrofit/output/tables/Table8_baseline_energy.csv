@@ -1,0 +1,10 @@
+Archetype,HDD Band,Envelope,Baseline Gas (therms/yr),Baseline CO₂ (kg/yr),Baseline Cost ($/yr),HP Energy (kWh/yr),HP CO₂ (kg/yr),HP Cost ($/yr)
+Cold-Poor,6000-7000,Poor,850,4505,1020,8500,3570,1020
+Cold-Medium,6000-7000,Medium,650,3445,780,6500,2730,780
+Cold-Good,6000-7000,Good,450,2385,540,4500,1890,540
+Moderate-Poor,4000-5000,Poor,600,3180,720,6000,2520,720
+Moderate-Medium,4000-5000,Medium,450,2385,540,4500,1890,540
+Moderate-Good,4000-5000,Good,320,1696,384,3200,1344,384
+Mild-Poor,2000-3000,Poor,400,2120,480,4000,1680,480
+Mild-Medium,2000-3000,Medium,300,1590,360,3000,1260,360
+Mild-Good,2000-3000,Good,200,1060,240,2000,840,240

@@ -1,0 +1,7 @@
+Measure,Intensity Reduction (%),Installed Cost ($),Lifetime (years),Source,Year
+None (Baseline),0,0,-,-,-
+Air Sealing,10,300,20,LBNL Home Energy Saver,2023
+Attic Insulation (R-49),15,1500,30,NREL ResStock (Deru et al.),2022
+Wall Insulation (R-13),12,3500,30,NREL ResStock (Deru et al.),2022
+Window Replacement (U-0.30),8,8000,25,ENERGY STAR Program (EPA),2023
+Comprehensive Package,30,12000,30,BPA/NEEA Pilot Studies,2021

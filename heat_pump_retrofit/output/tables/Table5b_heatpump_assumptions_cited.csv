@@ -1,0 +1,5 @@
+HP Type,COP @ 47°F,HSPF,COP @ 17°F,Installed Cost ($),Lifetime (years),Source,Year
+Gas Only (Baseline),-,-,-,0,-,Current system,-
+Standard ASHP,2.5,8.5,1.8,5000,15,AHRI Directory,2023
+Cold Climate ASHP,3.0,10.0,2.5,7000,15,NEEP ccASHP List,2023
+High-Performance ASHP,3.5,11.5,2.8,9000,15,Mitsubishi/Daikin specs,2023
